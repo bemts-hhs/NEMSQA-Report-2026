@@ -1,0 +1,149 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "figures/",
+  out.width = "100%"
+)
+```
+
+# NEMSQA Report 2026 <img src="figures/HHS PFP 3.png" align="right" width="250" alt="" />
+
+<!-- badges: start -->
+[![IDE Positron](https://img.shields.io/badge/Positron-Project-1E1E1E?style=flat&color=007CFF&labelColor=0055CC&logoColor=FFFFFF)](https://positron.posit.co/)
+[![Open Source](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+<!-- badges: end -->
+
+The NEMSQA Report 2026 analyzes National EMS Quality Alliance (NEMSQA) measures from 2021-2024 for the state of Iowa, assessing EMS service quality. This project uses the {`nemsqar`} R package, developed to facilitate standardized EMS quality reporting.
+
+This report is completed by the Bureau of Emergency Medical and Trauma Services (BEMTS) epidemiologist to gauge Iowa EMS agencys' performance against the NEMSQA national benchmarks.  In this way, BEMTS can assess patient care quality using standardized measures. The {`nemsqar`} package facilitates easy measure calculation for continuous quality improvement.
+
+BEMTS exists within the Division of Public Health at Iowa Department of Health and Human Services (HHS).
+
+## Installation
+To install the {`nemsqar`} package:
+
+### Install from GitHub
+remotes::install_github("bemts-hhs/nemsqar")
+
+### Install from CRAN
+install.packages("nemsqar")
+
+## NEMSQA Measure Set
+
+The National EMS Quality Alliance (NEMSQA) Measure Set includes a comprehensive list of EMS quality measures that have been developed and approved for national use. These measures are intended to guide EMS agencies in collecting data to assess and improve patient care. Below are the measures approved by the NEMSQA Measure Development Committee and Board of Trustees as of August 2019. Access to the full technical specifications for these measures is available on the NEMSQA website after creating a user profile. 
+
+```{r nemsqa-table, echo = FALSE, message = FALSE}
+ems_measures <- tibble::tibble(
+  `Measure ID` = c(
+    "Airway-01",
+    "Airway-05",
+    "Airway-18",
+    "Asthma-01",
+    "Hypoglycemia-01",
+    "Respiratory-01",
+    "Respiratory-02",
+    "Pediatrics-03b",
+    "Safety-01",
+    "Safety-02",
+    "Safety-04",
+    "Seizure-02",
+    "Stroke-01",
+    "Syncope-01",
+    "TBI-01",
+    "Trauma-01",
+    "Trauma-03",
+    "Trauma-04",
+    "Trauma-08",
+    "Trauma-14",
+    "TTR-01"
+  ),
+  Description = c(
+    "Percentage of EMS responses from a 911 request with successful advanced airway placement on first attempt without hypotension or hypoxia in peri-intubation period.",
+    "Percentage of intubation procedures from a 911 request in which adequate patient oxygen levels were achieved prior to intubation.",
+    "Percentage of successful advanced airway procedures from a 911 request in which waveform capnography is used for confirmation and monitoring.",
+    "Percentage of EMS responses from a 911 request for asthma patients receiving an aerosolized beta agonist.",
+    "Percentage of EMS responses from a 911 request for symptomatic hypoglycemia patients who receive treatment to correct hypoglycemia.",
+    "Percentage of EMS responses from a 911 request for respiratory distress patients with a respiratory assessment.",
+    "Percentage of EMS responses from a 911 request for patients with hypoxia receiving oxygen.",
+    "Percentage of EMS responses from a 911 request for patients <18 years receiving a weight-based medication with documented weight in kg or length-based estimate.",
+    "Percentage of EMS responses from a 911 request without lights and sirens.",
+    "Percentage of EMS transports from a 911 request without lights and sirens during patient transport.",
+    "Percentage of EMS transports from a 911 or interfacility request for patients <8 years transported with a pediatric restraint device.",
+    "Percentage of EMS responses from a 911 request for patients with status epilepticus who received benzodiazepine.",
+    "Percentage of EMS responses from a 911 request for suspected stroke patients who had a stroke assessment.",
+    "Percentage of EMS responses from a 911 request for syncope patients with a 12-lead (or greater) ECG performed.",
+    "Percentage of EMS transports from a 911 request for suspected TBI patients with documented oxygen level, ETCO2, and systolic BP.",
+    "Percentage of EMS responses from a 911 request for injury patients assessed for pain.",
+    "Percentage of EMS transports from a 911 request for patients whose pain score decreased during EMS encounter.",
+    "Percentage of EMS responses from a 911 request for patients meeting CDC trauma criteria transported to a trauma center.",
+    "Percentage of EMS transports from a 911 request for trauma patients with documented GCS, systolic BP, and respiratory rate.",
+    "Percentage of EMS transports from a 911 request for patients meeting Step 1 or Step 2 field triage criteria with a pre-arrival trauma alert.",
+    "Percentage of EMS responses from a 911 request for non-transported patients with documented vital signs."
+  ),
+  Type = c(
+    "Outcome",
+    "Process",
+    "Process",
+    "Process",
+    "Process",
+    "Process",
+    "Process",
+    "Process",
+    "Process",
+    "Process",
+    "Process",
+    "Process",
+    "Process",
+    "Process",
+    "Process",
+    "Process",
+    "Outcome",
+    "Process",
+    "Process",
+    "Process",
+    "Process"
+  ),
+  `National Quality Strategy Domain` = c(
+    "Clinical Process – Effectiveness",
+    "Patient Safety",
+    "Clinical Process – Effectiveness",
+    "Clinical Process – Effectiveness",
+    "Clinical Process – Effectiveness",
+    "Clinical Process – Effectiveness",
+    "Clinical Process – Effectiveness",
+    "Patient Safety",
+    "Patient Safety",
+    "Patient Safety",
+    "Patient Safety",
+    "Clinical Process – Effectiveness",
+    "Clinical Process – Effectiveness",
+    "Clinical Process – Effectiveness",
+    "Clinical Process – Effectiveness",
+    "Patient Experience",
+    "Patient Experience",
+    "Clinical Process – Effectiveness",
+    "Clinical Process – Effectiveness",
+    "Clinical Process – Effectiveness",
+    "Clinical Process – Effectiveness"
+  )
+)
+
+knitr::kable(ems_measures, caption = "EMS Clinical Performance Measures")
+```
+
+# Resources
+
+Interested persons may reference the following links and resources via NEMSQA's website.  Note - some materials may require a free membership to access.
+
+* [Measure Specification Table (NEMSQA)_2021](https://www.nemsqa.org/assets/docs/Measure-Specification-Table-NEMSQA_2021.pdf): A quick-reference table that includes broad-view measure specifications (i.e., numerator and denominator criteria) for each measure.
+* [Project Summary with Measure Narratives](https://www.nemsqa.org/assets/docs/Project-Summary-with-Measure-Narrative-NEMSQA.pdf): An overview of the EMS Compass 2.0 project and narratives for each measure, which include systems implications.
+* [Frequently Asked Questions](https://www.nemsqa.org/nemsqa-measure-faq): Answers to commonly asked questions.
+* [NEMSQA Measure Technical Release Notes_2021](https://www.nemsqa.org/assets/docs/NEMSQA-Measure-Technical-Release-Notes_2021.pdf): A reference table that documents changes made to the NEMSQA measures during the 2021 annual review.
+* [Fact Sheet](https://www.nemsqa.org/assets/docs/Fact-Sheet-NEMSQA.pdf): An info page explaining why agencies and systems should migrate from EMS Compass legacy/candidate measures to the National EMS Quality Alliance Measure Set.
