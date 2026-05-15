@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style type="text/css">
+@font-face {
+font-family: octicons-link;
+src: url(data:font/woff;charset=utf-8;base64,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) format('woff');
+}
+body {
+-webkit-text-size-adjust: 100%;
+text-size-adjust: 100%;
+color: #333;
+font-family: "Helvetica Neue", Helvetica, "Segoe UI", Arial, freesans, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+font-size: 16px;
+line-height: 1.6;
+word-wrap: break-word;
+}
+a {
+background-color: transparent;
+}
+a:active,
+a:hover {
+outline: 0;
+}
+strong {
+font-weight: bold;
+}
+h1 {
+font-size: 2em;
+margin: 0.67em 0;
+}
+img {
+border: 0;
+}
+hr {
+box-sizing: content-box;
+height: 0;
+}
+pre {
+overflow: auto;
+}
+code,
+kbd,
+pre {
+font-family: monospace, monospace;
+font-size: 1em;
+}
+input {
+color: inherit;
+font: inherit;
+margin: 0;
+}
+html input[disabled] {
+cursor: default;
+}
+input {
+line-height: normal;
+}
+input[type="checkbox"] {
+box-sizing: border-box;
+padding: 0;
+}
+table {
+border-collapse: collapse;
+border-spacing: 0;
+}
+td,
+th {
+padding: 0;
+}
+* {
+box-sizing: border-box;
+}
+input {
+font: 13px / 1.4 Helvetica, arial, nimbussansl, liberationsans, freesans, clean, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+}
+a {
+color: #4078c0;
+text-decoration: none;
+}
+a:hover,
+a:active {
+text-decoration: underline;
+}
+hr {
+height: 0;
+margin: 15px 0;
+overflow: hidden;
+background: transparent;
+border: 0;
+border-bottom: 1px solid #ddd;
+}
+hr:before {
+display: table;
+content: "";
+}
+hr:after {
+display: table;
+clear: both;
+content: "";
+}
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+margin-top: 15px;
+margin-bottom: 15px;
+line-height: 1.1;
+}
+h1 {
+font-size: 30px;
+}
+h2 {
+font-size: 21px;
+}
+h3 {
+font-size: 16px;
+}
+h4 {
+font-size: 14px;
+}
+h5 {
+font-size: 12px;
+}
+h6 {
+font-size: 11px;
+}
+blockquote {
+margin: 0;
+}
+ul,
+ol {
+padding: 0;
+margin-top: 0;
+margin-bottom: 0;
+}
+ol ol,
+ul ol {
+list-style-type: lower-roman;
+}
+ul ul ol,
+ul ol ol,
+ol ul ol,
+ol ol ol {
+list-style-type: lower-alpha;
+}
+dd {
+margin-left: 0;
+}
+code {
+font-family: Consolas, "Liberation Mono", Menlo, Courier, monospace;
+font-size: 12px;
+}
+pre {
+margin-top: 0;
+margin-bottom: 0;
+font: 12px Consolas, "Liberation Mono", Menlo, Courier, monospace;
+}
+.select::-ms-expand {
+opacity: 0;
+}
+.octicon {
+font: normal normal normal 16px/1 octicons-link;
+display: inline-block;
+text-decoration: none;
+text-rendering: auto;
+-webkit-font-smoothing: antialiased;
+-moz-osx-font-smoothing: grayscale;
+-webkit-user-select: none;
+-moz-user-select: none;
+-ms-user-select: none;
+user-select: none;
+}
+.octicon-link:before {
+content: '\f05c';
+}
+.markdown-body:before {
+display: table;
+content: "";
+}
+.markdown-body:after {
+display: table;
+clear: both;
+content: "";
+}
+.markdown-body>*:first-child {
+margin-top: 0 !important;
+}
+.markdown-body>*:last-child {
+margin-bottom: 0 !important;
+}
+a:not([href]) {
+color: inherit;
+text-decoration: none;
+}
+.anchor {
+display: inline-block;
+padding-right: 2px;
+margin-left: -18px;
+}
+.anchor:focus {
+outline: none;
+}
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+margin-top: 1em;
+margin-bottom: 16px;
+font-weight: bold;
+line-height: 1.4;
+}
+h1 .octicon-link,
+h2 .octicon-link,
+h3 .octicon-link,
+h4 .octicon-link,
+h5 .octicon-link,
+h6 .octicon-link {
+color: #000;
+vertical-align: middle;
+visibility: hidden;
+}
+h1:hover .anchor,
+h2:hover .anchor,
+h3:hover .anchor,
+h4:hover .anchor,
+h5:hover .anchor,
+h6:hover .anchor {
+text-decoration: none;
+}
+h1:hover .anchor .octicon-link,
+h2:hover .anchor .octicon-link,
+h3:hover .anchor .octicon-link,
+h4:hover .anchor .octicon-link,
+h5:hover .anchor .octicon-link,
+h6:hover .anchor .octicon-link {
+visibility: visible;
+}
+h1 {
+padding-bottom: 0.3em;
+font-size: 2.25em;
+line-height: 1.2;
+border-bottom: 1px solid #eee;
+}
+h1 .anchor {
+line-height: 1;
+}
+h2 {
+padding-bottom: 0.3em;
+font-size: 1.75em;
+line-height: 1.225;
+border-bottom: 1px solid #eee;
+}
+h2 .anchor {
+line-height: 1;
+}
+h3 {
+font-size: 1.5em;
+line-height: 1.43;
+}
+h3 .anchor {
+line-height: 1.2;
+}
+h4 {
+font-size: 1.25em;
+}
+h4 .anchor {
+line-height: 1.2;
+}
+h5 {
+font-size: 1em;
+}
+h5 .anchor {
+line-height: 1.1;
+}
+h6 {
+font-size: 1em;
+color: #777;
+}
+h6 .anchor {
+line-height: 1.1;
+}
+p,
+blockquote,
+ul,
+ol,
+dl,
+table,
+pre {
+margin-top: 0;
+margin-bottom: 16px;
+}
+hr {
+height: 4px;
+padding: 0;
+margin: 16px 0;
+background-color: #e7e7e7;
+border: 0 none;
+}
+ul,
+ol {
+padding-left: 2em;
+}
+ul ul,
+ul ol,
+ol ol,
+ol ul {
+margin-top: 0;
+margin-bottom: 0;
+}
+li>p {
+margin-top: 16px;
+}
+dl {
+padding: 0;
+}
+dl dt {
+padding: 0;
+margin-top: 16px;
+font-size: 1em;
+font-style: italic;
+font-weight: bold;
+}
+dl dd {
+padding: 0 16px;
+margin-bottom: 16px;
+}
+blockquote {
+padding: 0 15px;
+color: #777;
+border-left: 4px solid #ddd;
+}
+blockquote>:first-child {
+margin-top: 0;
+}
+blockquote>:last-child {
+margin-bottom: 0;
+}
+table {
+display: block;
+width: 100%;
+overflow: auto;
+word-break: normal;
+word-break: keep-all;
+}
+table th {
+font-weight: bold;
+}
+table th,
+table td {
+padding: 6px 13px;
+border: 1px solid #ddd;
+}
+table tr {
+background-color: #fff;
+border-top: 1px solid #ccc;
+}
+table tr:nth-child(2n) {
+background-color: #f8f8f8;
+}
+img {
+max-width: 100%;
+box-sizing: content-box;
+background-color: #fff;
+}
+code {
+padding: 0;
+padding-top: 0.2em;
+padding-bottom: 0.2em;
+margin: 0;
+font-size: 85%;
+background-color: rgba(0,0,0,0.04);
+border-radius: 3px;
+}
+code:before,
+code:after {
+letter-spacing: -0.2em;
+content: "\00a0";
+}
+pre>code {
+padding: 0;
+margin: 0;
+font-size: 100%;
+word-break: normal;
+white-space: pre;
+background: transparent;
+border: 0;
+}
+.highlight {
+margin-bottom: 16px;
+}
+.highlight pre,
+pre {
+padding: 16px;
+overflow: auto;
+font-size: 85%;
+line-height: 1.45;
+background-color: #f7f7f7;
+border-radius: 3px;
+}
+.highlight pre {
+margin-bottom: 0;
+word-break: normal;
+}
+pre {
+word-wrap: normal;
+}
+pre code {
+display: inline;
+max-width: initial;
+padding: 0;
+margin: 0;
+overflow: initial;
+line-height: inherit;
+word-wrap: normal;
+background-color: transparent;
+border: 0;
+}
+pre code:before,
+pre code:after {
+content: normal;
+}
+kbd {
+display: inline-block;
+padding: 3px 5px;
+font-size: 11px;
+line-height: 10px;
+color: #555;
+vertical-align: middle;
+background-color: #fcfcfc;
+border: solid 1px #ccc;
+border-bottom-color: #bbb;
+border-radius: 3px;
+box-shadow: inset 0 -1px 0 #bbb;
+}
+.pl-c {
+color: #969896;
+}
+.pl-c1,
+.pl-s .pl-v {
+color: #0086b3;
+}
+.pl-e,
+.pl-en {
+color: #795da3;
+}
+.pl-s .pl-s1,
+.pl-smi {
+color: #333;
+}
+.pl-ent {
+color: #63a35c;
+}
+.pl-k {
+color: #a71d5d;
+}
+.pl-pds,
+.pl-s,
+.pl-s .pl-pse .pl-s1,
+.pl-sr,
+.pl-sr .pl-cce,
+.pl-sr .pl-sra,
+.pl-sr .pl-sre {
+color: #183691;
+}
+.pl-v {
+color: #ed6a43;
+}
+.pl-id {
+color: #b52a1d;
+}
+.pl-ii {
+background-color: #b52a1d;
+color: #f8f8f8;
+}
+.pl-sr .pl-cce {
+color: #63a35c;
+font-weight: bold;
+}
+.pl-ml {
+color: #693a17;
+}
+.pl-mh,
+.pl-mh .pl-en,
+.pl-ms {
+color: #1d3e81;
+font-weight: bold;
+}
+.pl-mq {
+color: #008080;
+}
+.pl-mi {
+color: #333;
+font-style: italic;
+}
+.pl-mb {
+color: #333;
+font-weight: bold;
+}
+.pl-md {
+background-color: #ffecec;
+color: #bd2c00;
+}
+.pl-mi1 {
+background-color: #eaffea;
+color: #55a532;
+}
+.pl-mdr {
+color: #795da3;
+font-weight: bold;
+}
+.pl-mo {
+color: #1d3e81;
+}
+kbd {
+display: inline-block;
+padding: 3px 5px;
+font: 11px Consolas, "Liberation Mono", Menlo, Courier, monospace;
+line-height: 10px;
+color: #555;
+vertical-align: middle;
+background-color: #fcfcfc;
+border: solid 1px #ccc;
+border-bottom-color: #bbb;
+border-radius: 3px;
+box-shadow: inset 0 -1px 0 #bbb;
+}
+.task-list-item {
+list-style-type: none;
+}
+.task-list-item+.task-list-item {
+margin-top: 3px;
+}
+.task-list-item input {
+margin: 0 0.35em 0.25em -1.6em;
+vertical-align: middle;
+}
+:checked+.radio-label {
+z-index: 1;
+position: relative;
+border-color: #4078c0;
+}
+.sourceLine {
+display: inline-block;
+}
+code .kw { color: #000000; }
+code .dt { color: #ed6a43; }
+code .dv { color: #009999; }
+code .bn { color: #009999; }
+code .fl { color: #009999; }
+code .ch { color: #009999; }
+code .st { color: #183691; }
+code .co { color: #969896; }
+code .ot { color: #0086b3; }
+code .al { color: #a61717; }
+code .fu { color: #63a35c; }
+code .er { color: #a61717; background-color: #e3d2d2; }
+code .wa { color: #000000; }
+code .cn { color: #008080; }
+code .sc { color: #008080; }
+code .vs { color: #183691; }
+code .ss { color: #183691; }
+code .im { color: #000000; }
+code .va {color: #008080; }
+code .cf { color: #000000; }
+code .op { color: #000000; }
+code .bu { color: #000000; }
+code .ex { color: #000000; }
+code .pp { color: #999999; }
+code .at { color: #008080; }
+code .do { color: #969896; }
+code .an { color: #008080; }
+code .cv { color: #008080; }
+code .in { color: #008080; }
+</style>
+<style>
+body {
+box-sizing: border-box;
+min-width: 200px;
+max-width: 980px;
+margin: 0 auto;
+padding: 45px;
+padding-top: 0px;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+<h1 id="nemsqa-report-2026-">NEMSQA Report 2026
+<img role="img" aria-label src="data:image/png;base64,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" align="right" width="250" alt /></h1>
+<!-- badges: start -->
+
+<p><a href="https://positron.posit.co/"><img role="img" aria-label="IDE Positron" src="data:image/svg+xml;charset=utf-8;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDQiIGhlaWdodD0iMjAiIHJvbGU9ImltZyIgYXJpYS1sYWJlbD0iUG9zaXRyb246IFByb2plY3QiPjx0aXRsZT5Qb3NpdHJvbjogUHJvamVjdDwvdGl0bGU+PGZpbHRlciBpZD0iYmx1ciI+PGZlR2F1c3NpYW5CbHVyIGluPSJTb3VyY2VHcmFwaGljIiBzdGREZXZpYXRpb249IjE2Ii8+PC9maWx0ZXI+PGxpbmVhckdyYWRpZW50IGlkPSJzIiB4Mj0iMCIgeTI9IjEwMCUiPjxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iI2JiYiIgc3RvcC1vcGFjaXR5PSIuMSIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1vcGFjaXR5PSIuMSIvPjwvbGluZWFyR3JhZGllbnQ+PGNsaXBQYXRoIGlkPSJyIj48cmVjdCB3aWR0aD0iMTA0IiBoZWlnaHQ9IjIwIiByeD0iMyIgZmlsbD0iI2ZmZiIvPjwvY2xpcFBhdGg+PGcgY2xpcC1wYXRoPSJ1cmwoI3IpIj48cmVjdCB3aWR0aD0iNTUiIGhlaWdodD0iMjAiIGZpbGw9IiMwMDU1Y2MiLz48cmVjdCB4PSI1NSIgd2lkdGg9IjQ5IiBoZWlnaHQ9IjIwIiBmaWxsPSIjMDA3Y2ZmIi8+PHJlY3Qgd2lkdGg9IjEwNCIgaGVpZ2h0PSIyMCIgZmlsbD0idXJsKCNzKSIvPjwvZz48ZyBmaWxsPSIjZmZmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0iVmVyZGFuYSxHZW5ldmEsRGVqYVZ1IFNhbnMsc2Fucy1zZXJpZiIgdGV4dC1yZW5kZXJpbmc9Imdlb21ldHJpY1ByZWNpc2lvbiIgZm9udC1zaXplPSIxMTAiPjx0ZXh0IGFyaWEtaGlkZGVuPSJ0cnVlIiB4PSIyODUiIHk9IjE1MCIgZmlsbD0iIzAxMDEwMSIgZmlsbC1vcGFjaXR5PSIuODAiIGZpbHRlcj0idXJsKCNibHVyKSIgdHJhbnNmb3JtPSJzY2FsZSguMSkiIHRleHRMZW5ndGg9IjQ1MCI+UG9zaXRyb248L3RleHQ+PHRleHQgYXJpYS1oaWRkZW49InRydWUiIHg9IjI4NSIgeT0iMTUwIiBmaWxsPSIjMDEwMTAxIiBmaWxsLW9wYWNpdHk9Ii4zIiB0cmFuc2Zvcm09InNjYWxlKC4xKSIgdGV4dExlbmd0aD0iNDUwIj5Qb3NpdHJvbjwvdGV4dD48dGV4dCB4PSIyODUiIHk9IjE0MCIgdHJhbnNmb3JtPSJzY2FsZSguMSkiIGZpbGw9IiNmZmYiIHRleHRMZW5ndGg9IjQ1MCI+UG9zaXRyb248L3RleHQ+PHRleHQgYXJpYS1oaWRkZW49InRydWUiIHg9Ijc4NSIgeT0iMTUwIiBmaWxsPSIjMDEwMTAxIiBmaWxsLW9wYWNpdHk9Ii44MCIgZmlsdGVyPSJ1cmwoI2JsdXIpIiB0cmFuc2Zvcm09InNjYWxlKC4xKSIgdGV4dExlbmd0aD0iMzkwIj5Qcm9qZWN0PC90ZXh0Pjx0ZXh0IGFyaWEtaGlkZGVuPSJ0cnVlIiB4PSI3ODUiIHk9IjE1MCIgZmlsbD0iIzAxMDEwMSIgZmlsbC1vcGFjaXR5PSIuMyIgdHJhbnNmb3JtPSJzY2FsZSguMSkiIHRleHRMZW5ndGg9IjM5MCI+UHJvamVjdDwvdGV4dD48dGV4dCB4PSI3ODUiIHk9IjE0MCIgdHJhbnNmb3JtPSJzY2FsZSguMSkiIGZpbGw9IiNmZmYiIHRleHRMZW5ndGg9IjM5MCI+UHJvamVjdDwvdGV4dD48L2c+PC9zdmc+" alt="IDE Positron" /></a> <a href="LICENSE"><img role="img" aria-label="Open Source" src="data:image/svg+xml;charset=utf-8;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI3OCIgaGVpZ2h0PSIyMCIgcm9sZT0iaW1nIiBhcmlhLWxhYmVsPSJsaWNlbnNlOiBNSVQiPjx0aXRsZT5saWNlbnNlOiBNSVQ8L3RpdGxlPjxmaWx0ZXIgaWQ9ImJsdXIiPjxmZUdhdXNzaWFuQmx1ciBpbj0iU291cmNlR3JhcGhpYyIgc3RkRGV2aWF0aW9uPSIxNiIvPjwvZmlsdGVyPjxsaW5lYXJHcmFkaWVudCBpZD0icyIgeDI9IjAiIHkyPSIxMDAlIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiNiYmIiIHN0b3Atb3BhY2l0eT0iLjEiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3Atb3BhY2l0eT0iLjEiLz48L2xpbmVhckdyYWRpZW50PjxjbGlwUGF0aCBpZD0iciI+PHJlY3Qgd2lkdGg9Ijc4IiBoZWlnaHQ9IjIwIiByeD0iMyIgZmlsbD0iI2ZmZiIvPjwvY2xpcFBhdGg+PGcgY2xpcC1wYXRoPSJ1cmwoI3IpIj48cmVjdCB3aWR0aD0iNDciIGhlaWdodD0iMjAiIGZpbGw9IiM1NTUiLz48cmVjdCB4PSI0NyIgd2lkdGg9IjMxIiBoZWlnaHQ9IjIwIiBmaWxsPSIjNjdhYzA5Ii8+PHJlY3Qgd2lkdGg9Ijc4IiBoZWlnaHQ9IjIwIiBmaWxsPSJ1cmwoI3MpIi8+PC9nPjxnIGZpbGw9IiNmZmYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJWZXJkYW5hLEdlbmV2YSxEZWphVnUgU2FucyxzYW5zLXNlcmlmIiB0ZXh0LXJlbmRlcmluZz0iZ2VvbWV0cmljUHJlY2lzaW9uIiBmb250LXNpemU9IjExMCI+PHRleHQgYXJpYS1oaWRkZW49InRydWUiIHg9IjI0NSIgeT0iMTUwIiBmaWxsPSIjMDEwMTAxIiBmaWxsLW9wYWNpdHk9Ii44MCIgZmlsdGVyPSJ1cmwoI2JsdXIpIiB0cmFuc2Zvcm09InNjYWxlKC4xKSIgdGV4dExlbmd0aD0iMzcwIj5saWNlbnNlPC90ZXh0Pjx0ZXh0IGFyaWEtaGlkZGVuPSJ0cnVlIiB4PSIyNDUiIHk9IjE1MCIgZmlsbD0iIzAxMDEwMSIgZmlsbC1vcGFjaXR5PSIuMyIgdHJhbnNmb3JtPSJzY2FsZSguMSkiIHRleHRMZW5ndGg9IjM3MCI+bGljZW5zZTwvdGV4dD48dGV4dCB4PSIyNDUiIHk9IjE0MCIgdHJhbnNmb3JtPSJzY2FsZSguMSkiIGZpbGw9IiNmZmYiIHRleHRMZW5ndGg9IjM3MCI+bGljZW5zZTwvdGV4dD48dGV4dCBhcmlhLWhpZGRlbj0idHJ1ZSIgeD0iNjE1IiB5PSIxNTAiIGZpbGw9IiMwMTAxMDEiIGZpbGwtb3BhY2l0eT0iLjgwIiBmaWx0ZXI9InVybCgjYmx1cikiIHRyYW5zZm9ybT0ic2NhbGUoLjEpIiB0ZXh0TGVuZ3RoPSIyMTAiPk1JVDwvdGV4dD48dGV4dCBhcmlhLWhpZGRlbj0idHJ1ZSIgeD0iNjE1IiB5PSIxNTAiIGZpbGw9IiMwMTAxMDEiIGZpbGwtb3BhY2l0eT0iLjMiIHRyYW5zZm9ybT0ic2NhbGUoLjEpIiB0ZXh0TGVuZ3RoPSIyMTAiPk1JVDwvdGV4dD48dGV4dCB4PSI2MTUiIHk9IjE0MCIgdHJhbnNmb3JtPSJzY2FsZSguMSkiIGZpbGw9IiNmZmYiIHRleHRMZW5ndGg9IjIxMCI+TUlUPC90ZXh0PjwvZz48L3N2Zz4=" alt="Open Source" /></a></p>
+<!-- badges: end -->
+
+<p>The NEMSQA Report 2026 analyzes National EMS Quality Alliance
+(NEMSQA) measures from 2021-2024 for the state of Iowa, assessing EMS
+service quality. This project uses the {<code>nemsqar</code>} R package,
+developed to facilitate standardized EMS quality reporting.</p>
+<p>This report is completed by the Bureau of Emergency Medical and
+Trauma Services (BEMTS) epidemiologist to gauge Iowa EMS agencys’
+performance against the NEMSQA national benchmarks. In this way, BEMTS
+can assess patient care quality using standardized measures. The
+{<code>nemsqar</code>} package facilitates easy measure calculation for
+continuous quality improvement.</p>
+<p>BEMTS exists within the Division of Public Health at Iowa Department
+of Health and Human Services (HHS).</p>
+<h2 id="installation">Installation</h2>
+<p>To install the {<code>nemsqar</code>} package:</p>
+<h3 id="install-from-github">Install from GitHub</h3>
+<p>remotes::install_github(“bemts-hhs/nemsqar”)</p>
+<h3 id="install-from-cran">Install from CRAN</h3>
+<p>install.packages(“nemsqar”)</p>
+<h2 id="nemsqa-measure-set">NEMSQA Measure Set</h2>
+<p>The National EMS Quality Alliance (NEMSQA) Measure Set includes a
+comprehensive list of EMS quality measures that have been developed and
+approved for national use. These measures are intended to guide EMS
+agencies in collecting data to assess and improve patient care. Below
+are the measures approved by the NEMSQA Measure Development Committee
+and Board of Trustees as of August 2019. Access to the full technical
+specifications for these measures is available on the NEMSQA website
+after creating a user profile.</p>
+<table>
+<thead>
+<tr>
+<th align="left">Measure ID</th>
+<th align="left">Description</th>
+<th align="left">Type</th>
+<th align="left">National Quality Strategy Domain</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left">Airway-01</td>
+<td align="left">Percentage of EMS responses from a 911 request with
+successful advanced airway placement on first attempt without
+hypotension or hypoxia in peri-intubation period.</td>
+<td align="left">Outcome</td>
+<td align="left">Clinical Process – Effectiveness</td>
+</tr>
+<tr>
+<td align="left">Airway-05</td>
+<td align="left">Percentage of intubation procedures from a 911 request
+in which adequate patient oxygen levels were achieved prior to
+intubation.</td>
+<td align="left">Process</td>
+<td align="left">Patient Safety</td>
+</tr>
+<tr>
+<td align="left">Airway-18</td>
+<td align="left">Percentage of successful advanced airway procedures
+from a 911 request in which waveform capnography is used for
+confirmation and monitoring.</td>
+<td align="left">Process</td>
+<td align="left">Clinical Process – Effectiveness</td>
+</tr>
+<tr>
+<td align="left">Asthma-01</td>
+<td align="left">Percentage of EMS responses from a 911 request for
+asthma patients receiving an aerosolized beta agonist.</td>
+<td align="left">Process</td>
+<td align="left">Clinical Process – Effectiveness</td>
+</tr>
+<tr>
+<td align="left">Hypoglycemia-01</td>
+<td align="left">Percentage of EMS responses from a 911 request for
+symptomatic hypoglycemia patients who receive treatment to correct
+hypoglycemia.</td>
+<td align="left">Process</td>
+<td align="left">Clinical Process – Effectiveness</td>
+</tr>
+<tr>
+<td align="left">Respiratory-01</td>
+<td align="left">Percentage of EMS responses from a 911 request for
+respiratory distress patients with a respiratory assessment.</td>
+<td align="left">Process</td>
+<td align="left">Clinical Process – Effectiveness</td>
+</tr>
+<tr>
+<td align="left">Respiratory-02</td>
+<td align="left">Percentage of EMS responses from a 911 request for
+patients with hypoxia receiving oxygen.</td>
+<td align="left">Process</td>
+<td align="left">Clinical Process – Effectiveness</td>
+</tr>
+<tr>
+<td align="left">Pediatrics-03b</td>
+<td align="left">Percentage of EMS responses from a 911 request for
+patients &lt;18 years receiving a weight-based medication with
+documented weight in kg or length-based estimate.</td>
+<td align="left">Process</td>
+<td align="left">Patient Safety</td>
+</tr>
+<tr>
+<td align="left">Safety-01</td>
+<td align="left">Percentage of EMS responses from a 911 request without
+lights and sirens.</td>
+<td align="left">Process</td>
+<td align="left">Patient Safety</td>
+</tr>
+<tr>
+<td align="left">Safety-02</td>
+<td align="left">Percentage of EMS transports from a 911 request without
+lights and sirens during patient transport.</td>
+<td align="left">Process</td>
+<td align="left">Patient Safety</td>
+</tr>
+<tr>
+<td align="left">Safety-04</td>
+<td align="left">Percentage of EMS transports from a 911 or
+interfacility request for patients &lt;8 years transported with a
+pediatric restraint device.</td>
+<td align="left">Process</td>
+<td align="left">Patient Safety</td>
+</tr>
+<tr>
+<td align="left">Seizure-02</td>
+<td align="left">Percentage of EMS responses from a 911 request for
+patients with status epilepticus who received benzodiazepine.</td>
+<td align="left">Process</td>
+<td align="left">Clinical Process – Effectiveness</td>
+</tr>
+<tr>
+<td align="left">Stroke-01</td>
+<td align="left">Percentage of EMS responses from a 911 request for
+suspected stroke patients who had a stroke assessment.</td>
+<td align="left">Process</td>
+<td align="left">Clinical Process – Effectiveness</td>
+</tr>
+<tr>
+<td align="left">Syncope-01</td>
+<td align="left">Percentage of EMS responses from a 911 request for
+syncope patients with a 12-lead (or greater) ECG performed.</td>
+<td align="left">Process</td>
+<td align="left">Clinical Process – Effectiveness</td>
+</tr>
+<tr>
+<td align="left">TBI-01</td>
+<td align="left">Percentage of EMS transports from a 911 request for
+suspected TBI patients with documented oxygen level, ETCO2, and systolic
+BP.</td>
+<td align="left">Process</td>
+<td align="left">Clinical Process – Effectiveness</td>
+</tr>
+<tr>
+<td align="left">Trauma-01</td>
+<td align="left">Percentage of EMS responses from a 911 request for
+injury patients assessed for pain.</td>
+<td align="left">Process</td>
+<td align="left">Patient Experience</td>
+</tr>
+<tr>
+<td align="left">Trauma-03</td>
+<td align="left">Percentage of EMS transports from a 911 request for
+patients whose pain score decreased during EMS encounter.</td>
+<td align="left">Outcome</td>
+<td align="left">Patient Experience</td>
+</tr>
+<tr>
+<td align="left">Trauma-04</td>
+<td align="left">Percentage of EMS responses from a 911 request for
+patients meeting CDC trauma criteria transported to a trauma
+center.</td>
+<td align="left">Process</td>
+<td align="left">Clinical Process – Effectiveness</td>
+</tr>
+<tr>
+<td align="left">Trauma-08</td>
+<td align="left">Percentage of EMS transports from a 911 request for
+trauma patients with documented GCS, systolic BP, and respiratory
+rate.</td>
+<td align="left">Process</td>
+<td align="left">Clinical Process – Effectiveness</td>
+</tr>
+<tr>
+<td align="left">Trauma-14</td>
+<td align="left">Percentage of EMS transports from a 911 request for
+patients meeting Step 1 or Step 2 field triage criteria with a
+pre-arrival trauma alert.</td>
+<td align="left">Process</td>
+<td align="left">Clinical Process – Effectiveness</td>
+</tr>
+<tr>
+<td align="left">TTR-01</td>
+<td align="left">Percentage of EMS responses from a 911 request for
+non-transported patients with documented vital signs.</td>
+<td align="left">Process</td>
+<td align="left">Clinical Process – Effectiveness</td>
+</tr>
+</tbody>
+</table>
+<p>EMS Clinical Performance Measures</p>
+<h1 id="resources">Resources</h1>
+<p>Interested persons may reference the following links and resources
+via NEMSQA’s website. Note - some materials may require a free
+membership to access.</p>
+<ul>
+<li><a href="https://www.nemsqa.org/assets/docs/Measure-Specification-Table-NEMSQA_2021.pdf">Measure
+Specification Table (NEMSQA)_2021</a>: A quick-reference table that
+includes broad-view measure specifications (i.e., numerator and
+denominator criteria) for each measure.</li>
+<li><a href="https://www.nemsqa.org/assets/docs/Project-Summary-with-Measure-Narrative-NEMSQA.pdf">Project
+Summary with Measure Narratives</a>: An overview of the EMS Compass 2.0
+project and narratives for each measure, which include systems
+implications.</li>
+<li><a href="https://www.nemsqa.org/nemsqa-measure-faq">Frequently Asked
+Questions</a>: Answers to commonly asked questions.</li>
+<li><a href="https://www.nemsqa.org/assets/docs/NEMSQA-Measure-Technical-Release-Notes_2021.pdf">NEMSQA
+Measure Technical Release Notes_2021</a>: A reference table that
+documents changes made to the NEMSQA measures during the 2021 annual
+review.</li>
+<li><a href="https://www.nemsqa.org/assets/docs/Fact-Sheet-NEMSQA.pdf">Fact
+Sheet</a>: An info page explaining why agencies and systems should
+migrate from EMS Compass legacy/candidate measures to the National EMS
+Quality Alliance Measure Set.</li>
+</ul>
+
+</body>
+</html>
