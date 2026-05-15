@@ -1,4 +1,4 @@
-### IOWA NEMSQAR REPORT PREP 2025 ----------------------------------------------
+### IOWA NEMSQAR REPORT PREP 2026 ----------------------------------------------
 
 # This script prepares for the analyses using the `nemsqar` package v1.1.0
 # For the shapefiles, it is assumed that the files are downloaded from
@@ -13,34 +13,25 @@
 
 # install these packages if not already
 
-# install.packages(c("tidyverse", "traumar", "devtools", "remotes", "janitor",
-#                    "gt", "gtsummary", "gtExtras", "zipcodeR", "naniar",
-#                    "ggrepel", "devtools", "renv", "roxygen2",
-#                    "roxygen2md", "nemsqar", "extrafont", "patchwork", "showtext"
-#                   ))
+# install.packages("renv")
+# renv::init()
 
-# load packages ----
-# library(tidyverse)
-# library(traumar)
-# library(devtools)
-# library(remotes)
-# library(nemsqar)
-# library(janitor)
-# library(gt)
-# library(gtsummary)
-# library(gtExtras)
-# library(zipcodeR)
-# library(naniar)
-# library(ggrepel)
-# library(devtools)
-# library(renv)
-# library(roxygen2)
-# library(roxygen2md)
-# library(extrafont)
-# library(fontawesome)
-# library(patchwork)
-# library(systemfonts)
-# library(showtext)
+# renv::install(c(
+#   "tidyverse",
+#   "traumar",
+#   "devtools",
+#   "remotes",
+#   "janitor",
+#   "gt",
+#   "gtsummary",
+#   "gtExtras",
+#   "zipcodeR",
+#   "naniar",
+#   "nemsqar",
+#   "showtext",
+#   "extrafont",
+#   "flextable"
+# ))
 
 # showtext setup ----
 
@@ -1265,13 +1256,13 @@ prepare_population_statistical_file <- function(df) {
     # Create a trend column with population counts over multiple years
     dplyr::rowwise() |>
     dplyr::mutate(
-      `Population Trend` = list(c(`2021`, `2022`, `2023`, `2024`))
+      `Population Trend` = list(c(`2021`, `2022`, `2023`, `2024`, '2025'))
     ) |>
     dplyr::ungroup() |>
 
     # Apply small count suppression for confidentiality
     dplyr::mutate(dplyr::across(
-      `2021`:`2024`,
+      `2021`:`2025`,
       ~ traumar::small_count_label(., cutoff = 6, replacement = NA_integer_)
     )) |>
 
@@ -1627,7 +1618,7 @@ results_to_county_map <- function(
         ggplot2::labs(
           fill = "",
           title = glue::glue("NEMSQA {measure} Overall Performance: Iowa"),
-          subtitle = "Source: Iowa ImageTrend Elite || Years: 2021-2024",
+          subtitle = "Source: Iowa ImageTrend Elite || Years: 2021-2025",
           caption = oos_missing_caption
         ) +
         ggplot2::theme_void() +
@@ -1689,7 +1680,7 @@ results_to_county_map <- function(
         ggplot2::labs(
           fill = "",
           title = glue::glue("NEMSQA {measure} Overall Performance: Iowa"),
-          subtitle = "Source: Iowa ImageTrend Elite || Years: 2021-2024",
+          subtitle = "Source: Iowa ImageTrend Elite || Years: 2021-2025",
           caption = oos_missing_caption
         ) +
         ggplot2::theme_void() +
@@ -1787,8 +1778,9 @@ plot_nemsqa_pops <- function(
       family = "sans"
     ) +
     ggplot2::scale_y_continuous(
-      labels = function(x)
+      labels = function(x) {
         traumar::pretty_number(x, n_decimal = 2, truncate = TRUE)
+      }
     ) +
     ggplot2::guides(fill = "none", color = "none") +
     ggplot2::facet_wrap(
@@ -1799,7 +1791,7 @@ plot_nemsqa_pops <- function(
       x = NULL,
       y = NULL,
       title = glue::glue("{plot_title} Population Trends"),
-      subtitle = "Source: ImageTrend Elite EMS Registry | CY 2021-2024"
+      subtitle = "Source: ImageTrend Elite EMS Registry | CY 2021-2025"
     ) +
     traumar::theme_cleaner(...)
 
@@ -1841,7 +1833,8 @@ population_statistical_file_gt <- function(df, measure, fig_dim = c(5, 30)) {
     "2021",
     "2022",
     "2023",
-    "2024"
+    "2024",
+    "2025"
   )
   missing_columns <- setdiff(required_columns, colnames(df))
 
@@ -1866,7 +1859,7 @@ population_statistical_file_gt <- function(df, measure, fig_dim = c(5, 30)) {
         )),
         subtitle = gt::md(
           glue::glue(
-            "Source: Iowa ImageTrend Elite Registry || Years: 2021-2024"
+            "Source: Iowa ImageTrend Elite Registry || Years: 2021-2025"
           )
         )
       ) |>
@@ -1960,7 +1953,7 @@ results_statistical_file_gt <- function(df, groups) {
           glue::glue(" **NEMSQA {measure} Performance: Iowa**")
         )),
         subtitle = gt::md(
-          glue::glue("Reporting Years: 2021-2024")
+          glue::glue("Reporting Years: 2021-2025")
         )
       ) |>
 
@@ -2368,7 +2361,7 @@ export_nemsqa_gt <- function(
 
 ###_____________________________________________________________________________
 # we will:
-# - examine calendar years 2021-2024 of EMS data
+# - examine calendar years 2021-2025 of EMS data
 # - ingest various tables from each data section of NEMSIS to leverage that
 #   approach in the `nemsqar` package
 # - visualize statistical outputs for clean reporting
