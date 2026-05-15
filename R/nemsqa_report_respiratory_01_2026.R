@@ -1,4 +1,4 @@
-### IOWA NEMSQA REPORT RESPIRATORY-01 2025 ------------------------------------
+### IOWA NEMSQA REPORT RESPIRATORY-01 2026 ------------------------------------
 
 ###_____________________________________________________________________________
 # this script will contain all reporting calculations for Respiratory-01
@@ -19,13 +19,15 @@ patient_scene_2021 <- import_nemsqa_data(table = "patient_scene", year = 2021)
 patient_scene_2022 <- import_nemsqa_data(table = "patient_scene", year = 2022)
 patient_scene_2023 <- import_nemsqa_data(table = "patient_scene", year = 2023)
 patient_scene_2024 <- import_nemsqa_data(table = "patient_scene", year = 2024)
+patient_scene_2025 <- import_nemsqa_data(table = "patient_scene", year = 2025)
 
 # bind rows for the patient/scene table
 patient_scene_rbind <- dplyr::bind_rows(
   patient_scene_2021,
   patient_scene_2022,
   patient_scene_2023,
-  patient_scene_2024
+  patient_scene_2024,
+  patient_scene_2025
 )
 
 # set up patient/scene table for manipulations
@@ -97,13 +99,15 @@ response_2021 <- import_nemsqa_data(table = "response", year = 2021)
 response_2022 <- import_nemsqa_data(table = "response", year = 2022)
 response_2023 <- import_nemsqa_data(table = "response", year = 2023)
 response_2024 <- import_nemsqa_data(table = "response", year = 2024)
+response_2025 <- import_nemsqa_data(table = "response", year = 2025)
 
 # bind rows for the response table
 response_rbind <- dplyr::bind_rows(
   response_2021,
   response_2022,
   response_2023,
-  response_2024
+  response_2024,
+  response_2025
 )
 
 # set up response table for manipulations
@@ -115,13 +119,15 @@ situation_2021 <- import_nemsqa_data(table = "situation", year = 2021)
 situation_2022 <- import_nemsqa_data(table = "situation", year = 2022)
 situation_2023 <- import_nemsqa_data(table = "situation", year = 2023)
 situation_2024 <- import_nemsqa_data(table = "situation", year = 2024)
+situation_2025 <- import_nemsqa_data(table = "situation", year = 2025)
 
 # bind rows for the situation table
 situation_rbind <- dplyr::bind_rows(
   situation_2021,
   situation_2022,
   situation_2023,
-  situation_2024
+  situation_2024,
+  situation_2025
 )
 
 # set up situation table for manipulations
@@ -133,13 +139,15 @@ vitals_2021 <- import_nemsqa_data(table = "vitals", year = 2021)
 vitals_2022 <- import_nemsqa_data(table = "vitals", year = 2022)
 vitals_2023 <- import_nemsqa_data(table = "vitals", year = 2023)
 vitals_2024 <- import_nemsqa_data(table = "vitals", year = 2024)
+vitals_2025 <- import_nemsqa_data(table = "vitals", year = 2025)
 
 # bind rows for the vitals table
 vitals_rbind <- dplyr::bind_rows(
   vitals_2021,
   vitals_2022,
   vitals_2023,
-  vitals_2024
+  vitals_2024,
+  vitals_2025
 )
 
 # set up vitals table for manipulations

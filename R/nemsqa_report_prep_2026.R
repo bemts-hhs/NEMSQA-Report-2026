@@ -30,7 +30,9 @@
 #   "nemsqar",
 #   "showtext",
 #   "extrafont",
-#   "flextable"
+#   "flextable",
+#   "mirai",
+#   "mori"
 # ))
 
 # showtext setup ----
@@ -681,83 +683,9 @@ generate_random_ID <- function(n, set_seed = 12345) {
   return(random_strings)
 }
 
-#_____________________________________________________________________________
-# Function: prepare_map_data()
-#_____________________________________________________________________________
-# This function loads and prepares shapefile data for mapping purposes,
-# specifically filtering to Iowa (STATEFP == "19"). It supports three shapefile
-# types: county, state, and ZIP Code Tabulation Area (ZCTA).
-#
-# Arguments:
-#   - type: Character. Specifies the geographic unit to load. Must be one of:
-#           "county", "state", or "zcta". Default is "county".
-#
-# Returns:
-#   - A tibble (class `sf` with tibble structure) containing shapefile geometry
-#     and attribute data, filtered to Iowa (STATEFP == "19").
-#
-# Notes:
-#   - Uses {sf} for reading shapefiles and {dplyr} for filtering.
-#   - Relies on standardized 2024 TIGER/Line shapefiles located in a
-#     predetermined directory.
-#   - Ensures consistent file selection and state filtering for downstream
-#     geospatial analysis.
-#_____________________________________________________________________________
-prepare_map_data <- function(type = c("county", "state", "zcta")) {
-  # Validate the `type` argument and resolve its value
-  type <- match.arg(type, choices = c("county", "state", "zcta"))
-
-  # Determine the correct shapefile name based on `type`
-  file <- if (type == "county") {
-    "tl_2024_us_county.shp"
-  } else if (type == "state") {
-    "tl_2024_us_state.shp"
-  } else if (type == "zcta") {
-    "tl_2024_us_zcta520.shp"
-  }
-
-  # Get the secure shapefile path
-  shapefile_path <- Sys.getenv("SHAPE_FILE_PATH")
-
-  # Construct the full file path to the shapefile
-  filepath <- file.path(
-    shapefile_path,
-    type,
-    file
-  )
-
-  # Validate that the shapefile exists
-  if (!file.exists(filepath)) {
-    cli::cli_abort(
-      "The shapefile {.file {filepath}} does not exist.
-      Please verify the path and file structure."
-    )
-  }
-
-  # Attempt to read the shapefile using {sf}
-  shapefile <- tryCatch(
-    sf::read_sf(dsn = filepath, as_tibble = TRUE),
-    error = function(e) {
-      cli::cli_abort(
-        "Failed to read shapefile: {.file {filepath}}. \nError: {e$message}"
-      )
-    }
-  )
-
-  # Validate that the required field `STATEFP` exists
-  if (!"STATEFP" %in% names(shapefile)) {
-    cli::cli_abort(
-      "The shapefile is missing the required field {.var STATEFP}."
-    )
-  }
-
-  # Filter the shapefile to only include records from Iowa (FIPS code "19")
-  shapefile <- shapefile |>
-    dplyr::filter(STATEFP == "19")
-
-  # Return the filtered shapefile
-  return(shapefile)
-}
+###_____________________________________________________________________________
+# Get location data ----
+###_____________________________________________________________________________
 
 # Get the secure county data file path
 county_data_path <- Sys.getenv("COUNTY_FILE_PATH")
@@ -921,7 +849,6 @@ geonames_admin2_iowa <- geonames_county |>
 ###_____________________________________________________________________________
 
 # final manipulations of the Iowa data to join to the AED data
-
 Iowa_Data_Final <- US_clean |>
   dplyr::left_join(
     geonames_admin2_iowa |> dplyr::select(county_code, name),
@@ -1256,7 +1183,7 @@ prepare_population_statistical_file <- function(df) {
     # Create a trend column with population counts over multiple years
     dplyr::rowwise() |>
     dplyr::mutate(
-      `Population Trend` = list(c(`2021`, `2022`, `2023`, `2024`, '2025'))
+      `Population Trend` = list(c(`2021`, `2022`, `2023`, `2024`, `2025`))
     ) |>
     dplyr::ungroup() |>
 
