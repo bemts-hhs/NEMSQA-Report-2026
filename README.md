@@ -12,7 +12,7 @@ Source](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 <!-- badges: end -->
 
 The NEMSQA Report 2026 analyzes National EMS Quality Alliance (NEMSQA)
-measures from 2021-2024 for the state of Iowa, assessing EMS service
+measures from 2021-2025 for the state of Iowa, assessing EMS service
 quality. This project uses the {`nemsqar`} R package, developed to
 facilitate standardized EMS quality reporting.
 
