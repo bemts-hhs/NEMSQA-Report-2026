@@ -160,7 +160,7 @@ vitals_table <- vitals_rbind |>
 
 ### respiratory-01 populations #################################################
 
-# over all years 2021-2024
+# over all years 2021-2025
 respiratory_01_pop <- nemsqar::respiratory_01_population(
   df = NULL,
   patient_scene_table = patient_scene_table,
@@ -179,7 +179,7 @@ respiratory_01_pop <- nemsqar::respiratory_01_population(
   evitals_14_col = VITALS_RESPIRATORY_RATE_E_VITALS_14
 )
 
-# population results for 2021-2024
+# population results for 2021-2025
 respiratory_01_pop_filter_process <- respiratory_01_pop$filter_process
 
 # 2021
