@@ -13,42 +13,24 @@
 # tables imported in alphabetical order
 # tables do not need to be loaded again if already in memory
 
-### arrest tables ################################################################
-arrest_2021 <- import_nemsqa_data(table = "arrest", year = 2021)
-arrest_2022 <- import_nemsqa_data(table = "arrest", year = 2022)
-arrest_2023 <- import_nemsqa_data(table = "arrest", year = 2023)
-arrest_2024 <- import_nemsqa_data(table = "arrest", year = 2024)
-
-# bind rows for the arrest table
-arrest_rbind <- dplyr::bind_rows(
-  arrest_2021,
-  arrest_2022,
-  arrest_2023,
-  arrest_2024
+# arrest tables ----------------------------------------------------------
+# Utilize mirai for asynchronous loading
+# automatically bind rows
+arrest_table <- load_nemsqa_parallel(
+  table = "arrest",
+  years = 2021:2025,
+  cores = 13
 )
 
-# set up arrest table for manipulations
-arrest_table <- arrest_rbind |>
-  clean_names_dates_data()
 
-### patient/scene tables #########################################################
-# given that patient and scene data are 1-1 relationship, join those tables
-patient_scene_2021 <- import_nemsqa_data(table = "patient_scene", year = 2021)
-patient_scene_2022 <- import_nemsqa_data(table = "patient_scene", year = 2022)
-patient_scene_2023 <- import_nemsqa_data(table = "patient_scene", year = 2023)
-patient_scene_2024 <- import_nemsqa_data(table = "patient_scene", year = 2024)
-
-# bind rows for the patient/scene table
-patient_scene_rbind <- dplyr::bind_rows(
-  patient_scene_2021,
-  patient_scene_2022,
-  patient_scene_2023,
-  patient_scene_2024
+# patient tables ---------------------------------------------------------
+# Utilize mirai for asynchronous loading
+# automatically bind rows
+patient_scene_clean <- load_nemsqa_parallel(
+  table = "patient_scene",
+  years = 2021:2025,
+  cores = 13
 )
-
-# set up patient/scene table for manipulations
-patient_scene_clean <- patient_scene_rbind |>
-  clean_names_dates_data()
 
 # final manipulations on the patient/scene table
 # handle multiple issues with location using external data sources with
@@ -110,42 +92,23 @@ patient_scene_table <- patient_scene_clean |>
     external_region = county_data$`Region: Preparedness`
   )
 
+# share the patient_scene_table
+patient_scene_table_s <- mori::share(patient_scene_table)
 
-### procedures tables ############################################################
-procedures_2021 <- import_nemsqa_data(table = "procedures", year = 2021)
-procedures_2022 <- import_nemsqa_data(table = "procedures", year = 2022)
-procedures_2023 <- import_nemsqa_data(table = "procedures", year = 2023)
-procedures_2024 <- import_nemsqa_data(table = "procedures", year = 2024)
 
-# bind rows for the procedures table
-procedures_rbind <- dplyr::bind_rows(
-  procedures_2021,
-  procedures_2022,
-  procedures_2023,
-  procedures_2024
+# procedures tables ------------------------------------------------------
+procedures_table <- load_nemsqa_parallel(
+  table = "procedures",
+  years = 2021:2025,
+  cores = 13
 )
 
-# set up procedures table for manipulations
-procedures_table <- procedures_rbind |>
-  clean_names_dates_data()
-
-### response tables ##############################################################
-response_2021 <- import_nemsqa_data(table = "response", year = 2021)
-response_2022 <- import_nemsqa_data(table = "response", year = 2022)
-response_2023 <- import_nemsqa_data(table = "response", year = 2023)
-response_2024 <- import_nemsqa_data(table = "response", year = 2024)
-
-# bind rows for the response table
-response_rbind <- dplyr::bind_rows(
-  response_2021,
-  response_2022,
-  response_2023,
-  response_2024
+# response tables --------------------------------------------------------
+response_table <- load_nemsqa_parallel(
+  table = "response",
+  years = 2021:2025,
+  cores = 13
 )
-
-# set up response table for manipulations
-response_table <- response_rbind |>
-  clean_names_dates_data()
 
 ### vitals tables ################################################################
 vitals_2021 <- import_nemsqa_data(table = "vitals", year = 2021)

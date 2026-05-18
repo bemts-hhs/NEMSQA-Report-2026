@@ -1095,13 +1095,16 @@ load_nemsqa_parallel <- function(
     cores <- max(1, total_cores - 4)
   }
 
+  # Percent of total cores used
+  percent_cores <- scales::percent(x = cores / total_cores, accuracy = 0.01)
+
   # CLI reporting
   cli::cli_h2("Parallel NEMSQA Import via mirai")
   cli::cli_alert_info("Table: {table}")
   cli::cli_alert_info("Years: {paste(years, collapse = ', ')}")
   cli::cli_alert_info("Workers: {cores}")
   cli::cli_alert_info(
-    text = "Out of {total_cores} available, {cores} cores will be used for parallel processing."
+    text = "Out of {total_cores} available, {cores} ({percent_cores}) cores will be used for parallel processing."
   )
 
   # Start mirai daemon processes
