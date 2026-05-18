@@ -1,10 +1,10 @@
 ### IOWA NEMSQA REPORT RESPIRATORY-01 2026 ------------------------------------
 
 ###_____________________________________________________________________________
-# this script will contain all reporting calculations for Respiratory-01
-# use nemsqa_report_prep_2025.R to get critical functions into memory
+# this script will contain all reporting calculations for Airway-01 use
+# nemsqa_report_utils_2026.R to get critical functions into memory
 ###_____________________________________________________________________________
-# assume that nemsqa_report_prep_2025.R was already ran to load needed packages
+# assume that nemsqa_report_prep_2026.R was already ran to load needed packages
 # and project-specific custom functions in the project
 ###_____________________________________________________________________________
 
