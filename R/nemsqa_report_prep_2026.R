@@ -7,6 +7,9 @@
 # Zip Code Tabulation Areas (ZCTAS) options in the dropdown dialogue to download
 # the files manually and put them in the directory used here.
 
+# report years
+report_years <- 2021:2025
+
 ### PACKAGES -------------------------------------------------------------------
 
 # CRAN versions ================================================================
@@ -348,6 +351,10 @@ missing_location_data <- tibble::tibble(
   dplyr::select(colnames(Iowa_Data_Final))
 
 Iowa_Data_Final <- dplyr::bind_rows(Iowa_Data_Final, missing_location_data)
+
+# remove the con object
+rm(list = c("con", "temp"))
+gc()
 
 ###_____________________________________________________________________________
 # we will:

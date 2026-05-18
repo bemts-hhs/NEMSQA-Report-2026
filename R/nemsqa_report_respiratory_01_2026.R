@@ -13,26 +13,15 @@
 # tables imported in alphabetical order
 # tables do not need to be loaded again if already in memory
 
-### patient/scene tables #########################################################
-# given that patient and scene data are 1-1 relationship, join those tables
-patient_scene_2021 <- import_nemsqa_data(table = "patient_scene", year = 2021)
-patient_scene_2022 <- import_nemsqa_data(table = "patient_scene", year = 2022)
-patient_scene_2023 <- import_nemsqa_data(table = "patient_scene", year = 2023)
-patient_scene_2024 <- import_nemsqa_data(table = "patient_scene", year = 2024)
-patient_scene_2025 <- import_nemsqa_data(table = "patient_scene", year = 2025)
+### patient/scene tables #######################################################
 
-# bind rows for the patient/scene table
-patient_scene_rbind <- dplyr::bind_rows(
-  patient_scene_2021,
-  patient_scene_2022,
-  patient_scene_2023,
-  patient_scene_2024,
-  patient_scene_2025
+# Utilize mirai for asynchronous loading
+# automatically bind rows
+patient_scene_clean <- load_nemsqa_parallel(
+  table = "patient_scene",
+  years = 2021:2025,
+  cores = 13
 )
-
-# set up patient/scene table for manipulations
-patient_scene_clean <- patient_scene_rbind |>
-  clean_names_dates_data()
 
 # final manipulations on the patient/scene table
 # handle multiple issues with location using external data sources with
@@ -94,65 +83,41 @@ patient_scene_table <- patient_scene_clean |>
     external_region = county_data$`Region: Preparedness`
   )
 
-### response tables ##############################################################
-response_2021 <- import_nemsqa_data(table = "response", year = 2021)
-response_2022 <- import_nemsqa_data(table = "response", year = 2022)
-response_2023 <- import_nemsqa_data(table = "response", year = 2023)
-response_2024 <- import_nemsqa_data(table = "response", year = 2024)
-response_2025 <- import_nemsqa_data(table = "response", year = 2025)
+# share the patient_scene_table
+patient_scene_table_s <- mori::share(patient_scene_table)
 
-# bind rows for the response table
-response_rbind <- dplyr::bind_rows(
-  response_2021,
-  response_2022,
-  response_2023,
-  response_2024,
-  response_2025
+### response tables ############################################################
+# set up response table for manipulations
+response_table <- load_nemsqa_parallel(
+  table = "response",
+  years = 2021:2025,
+  cores = 13
 )
 
-# set up response table for manipulations
-response_table <- response_rbind |>
-  clean_names_dates_data()
+# share the response table
+response_table_s <- mori::share(response_table)
 
 ### situation tables #############################################################
-situation_2021 <- import_nemsqa_data(table = "situation", year = 2021)
-situation_2022 <- import_nemsqa_data(table = "situation", year = 2022)
-situation_2023 <- import_nemsqa_data(table = "situation", year = 2023)
-situation_2024 <- import_nemsqa_data(table = "situation", year = 2024)
-situation_2025 <- import_nemsqa_data(table = "situation", year = 2025)
-
-# bind rows for the situation table
-situation_rbind <- dplyr::bind_rows(
-  situation_2021,
-  situation_2022,
-  situation_2023,
-  situation_2024,
-  situation_2025
+# set up situation table for manipulations
+situation_table <- load_nemsqa_parallel(
+  table = "situation",
+  years = 2021:2025,
+  cores = 13
 )
 
-# set up situation table for manipulations
-situation_table <- situation_rbind |>
-  clean_names_dates_data()
+# Share the situation_table
+situation_table_s <- mori::share(situation_table)
 
 ### vitals tables ################################################################
-vitals_2021 <- import_nemsqa_data(table = "vitals", year = 2021)
-vitals_2022 <- import_nemsqa_data(table = "vitals", year = 2022)
-vitals_2023 <- import_nemsqa_data(table = "vitals", year = 2023)
-vitals_2024 <- import_nemsqa_data(table = "vitals", year = 2024)
-vitals_2025 <- import_nemsqa_data(table = "vitals", year = 2025)
-
-# bind rows for the vitals table
-vitals_rbind <- dplyr::bind_rows(
-  vitals_2021,
-  vitals_2022,
-  vitals_2023,
-  vitals_2024,
-  vitals_2025
+# set up vitals table for manipulations
+vitals_table <- load_nemsqa_parallel(
+  table = "vitals",
+  years = 2021:2025,
+  cores = 13
 )
 
-# set up vitals table for manipulations
-vitals_table <- vitals_rbind |>
-  clean_names_dates_data()
+# share the vitals table
+vitals_table_s <- mori::share(vitals_table)
 
 ### CALCULATIONS ---------------------------------------------------------------
 
@@ -182,109 +147,42 @@ respiratory_01_pop <- nemsqar::respiratory_01_population(
 # population results for 2021-2025
 respiratory_01_pop_filter_process <- respiratory_01_pop$filter_process
 
-# 2021
-respiratory_01_pop_2021 <- nemsqar::respiratory_01_population(
-  df = NULL,
-  patient_scene_table = patient_scene_table |>
-    dplyr::filter(INCIDENT_YEAR == 2021),
-  response_table = response_table |> dplyr::filter(INCIDENT_YEAR == 2021),
-  situation_table = situation_table |> dplyr::filter(INCIDENT_YEAR == 2021),
-  vitals_table = vitals_table |> dplyr::filter(INCIDENT_YEAR == 2021),
-  erecord_01_col = FACT_INCIDENT_PK,
-  incident_date_col = INCIDENT_DATE,
-  patient_DOB_col = PATIENT_DATE_OF_BIRTH_E_PATIENT_17,
-  epatient_15_col = PATIENT_AGE_E_PATIENT_15,
-  epatient_16_col = PATIENT_AGE_UNITS_E_PATIENT_16,
-  eresponse_05_col = RESPONSE_TYPE_OF_SERVICE_REQUESTED_WITH_CODE_E_RESPONSE_05,
-  esituation_11_col = SITUATION_PROVIDER_PRIMARY_IMPRESSION_CODE_AND_DESCRIPTION_E_SITUATION_11,
-  esituation_12_col = SITUATION_PROVIDER_SECONDARY_IMPRESSION_DESCRIPTION_AND_CODE_E_SITUATION_12,
-  evitals_12_col = VITALS_PULSE_OXIMETRY_E_VITALS_12,
-  evitals_14_col = VITALS_RESPIRATORY_RATE_E_VITALS_14
-)
+# set up daemons
+mirai::daemons(n = 13)
 
-# population results 2021
-respiratory_01_pop_filter_process_2021 <- respiratory_01_pop_2021$filter_process |>
-  dplyr::mutate(YEAR = 2021)
+# get respiratory_01 population data for each year using mirai and mori
+respiratory_01_pop_years <- mirai::mirai_map(
+  report_years,
+  \(yr, ps, rsp, sit, vit) {
+    nemsqar::respiratory_01_population(
+      df = NULL,
+      patient_scene_table = ps |>
+        dplyr::filter(INCIDENT_YEAR == yr),
+      response_table = rsp |> dplyr::filter(INCIDENT_YEAR == yr),
+      situation_table = sit |> dplyr::filter(INCIDENT_YEAR == yr),
+      vitals_table = vit |> dplyr::filter(INCIDENT_YEAR == yr),
+      erecord_01_col = FACT_INCIDENT_PK,
+      incident_date_col = INCIDENT_DATE,
+      patient_DOB_col = PATIENT_DATE_OF_BIRTH_E_PATIENT_17,
+      epatient_15_col = PATIENT_AGE_E_PATIENT_15,
+      epatient_16_col = PATIENT_AGE_UNITS_E_PATIENT_16,
+      eresponse_05_col = RESPONSE_TYPE_OF_SERVICE_REQUESTED_WITH_CODE_E_RESPONSE_05,
+      esituation_11_col = SITUATION_PROVIDER_PRIMARY_IMPRESSION_CODE_AND_DESCRIPTION_E_SITUATION_11,
+      esituation_12_col = SITUATION_PROVIDER_SECONDARY_IMPRESSION_DESCRIPTION_AND_CODE_E_SITUATION_12,
+      evitals_12_col = VITALS_PULSE_OXIMETRY_E_VITALS_12,
+      evitals_14_col = VITALS_RESPIRATORY_RATE_E_VITALS_14
+    )
+  },
+  .args = list(
+    ps = patient_scene_table_s,
+    rsp = response_table_s,
+    sit = situation_table_s,
+    vit = vitals_table_s
+  )
+)[.progress]
 
-# 2022
-respiratory_01_pop_2022 <- nemsqar::respiratory_01_population(
-  df = NULL,
-  patient_scene_table = patient_scene_table |>
-    dplyr::filter(INCIDENT_YEAR == 2022),
-  response_table = response_table |> dplyr::filter(INCIDENT_YEAR == 2022),
-  situation_table = situation_table |> dplyr::filter(INCIDENT_YEAR == 2022),
-  vitals_table = vitals_table |> dplyr::filter(INCIDENT_YEAR == 2022),
-  erecord_01_col = FACT_INCIDENT_PK,
-  incident_date_col = INCIDENT_DATE,
-  patient_DOB_col = PATIENT_DATE_OF_BIRTH_E_PATIENT_17,
-  epatient_15_col = PATIENT_AGE_E_PATIENT_15,
-  epatient_16_col = PATIENT_AGE_UNITS_E_PATIENT_16,
-  eresponse_05_col = RESPONSE_TYPE_OF_SERVICE_REQUESTED_WITH_CODE_E_RESPONSE_05,
-  esituation_11_col = SITUATION_PROVIDER_PRIMARY_IMPRESSION_CODE_AND_DESCRIPTION_E_SITUATION_11,
-  esituation_12_col = SITUATION_PROVIDER_SECONDARY_IMPRESSION_DESCRIPTION_AND_CODE_E_SITUATION_12,
-  evitals_12_col = VITALS_PULSE_OXIMETRY_E_VITALS_12,
-  evitals_14_col = VITALS_RESPIRATORY_RATE_E_VITALS_14
-)
-
-# population results 2022
-respiratory_01_pop_filter_process_2022 <- respiratory_01_pop_2022$filter_process |>
-  dplyr::mutate(YEAR = 2022)
-
-# 2023
-respiratory_01_pop_2023 <- nemsqar::respiratory_01_population(
-  df = NULL,
-  patient_scene_table = patient_scene_table |>
-    dplyr::filter(INCIDENT_YEAR == 2023),
-  response_table = response_table |> dplyr::filter(INCIDENT_YEAR == 2023),
-  situation_table = situation_table |> dplyr::filter(INCIDENT_YEAR == 2023),
-  vitals_table = vitals_table |> dplyr::filter(INCIDENT_YEAR == 2023),
-  erecord_01_col = FACT_INCIDENT_PK,
-  incident_date_col = INCIDENT_DATE,
-  patient_DOB_col = PATIENT_DATE_OF_BIRTH_E_PATIENT_17,
-  epatient_15_col = PATIENT_AGE_E_PATIENT_15,
-  epatient_16_col = PATIENT_AGE_UNITS_E_PATIENT_16,
-  eresponse_05_col = RESPONSE_TYPE_OF_SERVICE_REQUESTED_WITH_CODE_E_RESPONSE_05,
-  esituation_11_col = SITUATION_PROVIDER_PRIMARY_IMPRESSION_CODE_AND_DESCRIPTION_E_SITUATION_11,
-  esituation_12_col = SITUATION_PROVIDER_SECONDARY_IMPRESSION_DESCRIPTION_AND_CODE_E_SITUATION_12,
-  evitals_12_col = VITALS_PULSE_OXIMETRY_E_VITALS_12,
-  evitals_14_col = VITALS_RESPIRATORY_RATE_E_VITALS_14
-)
-
-# population results 2023
-respiratory_01_pop_filter_process_2023 <- respiratory_01_pop_2023$filter_process |>
-  dplyr::mutate(YEAR = 2023)
-
-# 2024
-respiratory_01_pop_2024 <- nemsqar::respiratory_01_population(
-  df = NULL,
-  patient_scene_table = patient_scene_table |>
-    dplyr::filter(INCIDENT_YEAR == 2024),
-  response_table = response_table |> dplyr::filter(INCIDENT_YEAR == 2024),
-  situation_table = situation_table |> dplyr::filter(INCIDENT_YEAR == 2024),
-  vitals_table = vitals_table |> dplyr::filter(INCIDENT_YEAR == 2024),
-  erecord_01_col = FACT_INCIDENT_PK,
-  incident_date_col = INCIDENT_DATE,
-  patient_DOB_col = PATIENT_DATE_OF_BIRTH_E_PATIENT_17,
-  epatient_15_col = PATIENT_AGE_E_PATIENT_15,
-  epatient_16_col = PATIENT_AGE_UNITS_E_PATIENT_16,
-  eresponse_05_col = RESPONSE_TYPE_OF_SERVICE_REQUESTED_WITH_CODE_E_RESPONSE_05,
-  esituation_11_col = SITUATION_PROVIDER_PRIMARY_IMPRESSION_CODE_AND_DESCRIPTION_E_SITUATION_11,
-  esituation_12_col = SITUATION_PROVIDER_SECONDARY_IMPRESSION_DESCRIPTION_AND_CODE_E_SITUATION_12,
-  evitals_12_col = VITALS_PULSE_OXIMETRY_E_VITALS_12,
-  evitals_14_col = VITALS_RESPIRATORY_RATE_E_VITALS_14
-)
-
-# population results 2024
-respiratory_01_pop_filter_process_2024 <- respiratory_01_pop_2024$filter_process |>
-  dplyr::mutate(YEAR = 2024)
-
-# respiratory-01 populations over the years
-respiratory_01_pop_years <- dplyr::bind_rows(
-  respiratory_01_pop_filter_process_2021,
-  respiratory_01_pop_filter_process_2022,
-  respiratory_01_pop_filter_process_2023,
-  respiratory_01_pop_filter_process_2024
-)
+# Unburden daemons
+mirai::daemons(0)
 
 # plot population trends over time
 respiratory_01_pop_years |>

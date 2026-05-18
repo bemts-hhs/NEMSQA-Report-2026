@@ -97,7 +97,7 @@ clean_names_dates_data <- function(df) {
 clean_county_names_1 <- function(df, county_column, city_column, zip_column) {
   # let x be a named column within a data.frame
 
-  if (!is.data.frame(df) && !is_tibble(df)) {
+  if (!is.data.frame(df) && !tibble::is_tibble(df)) {
     cli::cli_abort(
       "The first argument `df` of the input was of class {.cls {class(df)}}but must be a {.cls data.frame}.  Please supply a {.cls data.frame} to the argument {.var df}."
     )
@@ -1057,59 +1057,80 @@ import_nemsqa_statistical_files <- function(location = NULL, measure) {
   }) # End of with(temp_env)
 }
 
-# Load and clean multiple NEMSQA data files in parallel.
+# Load and clean multiple NEMSQA data files in parallel using mirai.
 #
-# This function imports and cleans multiple years or file chunks for a given NEMSQA table
-# using parallel processing. Each year/chunk is handled independently in parallel worker
-# processes, and the results are combined into a single tibble upon completion.
+# This function imports and cleans multiple years of a NEMSQA table
+# using asynchronous parallel workers created by mirai. Each year is
+# processed in an independent daemon process. The returned object is a
+# single tibble produced by binding all year-level results.
 #
 # Arguments:
-# - table: character string indicating the table name to import.
-# - years: character or numeric vector of year or chunk identifiers.
-# - cores: optional integer specifying how many cores to use (defaults to physical cores - 4).
+# - table: Character string specifying the NEMSQA table name (for example "patient_scene").
+# - years: Numeric vector of reporting years to process (default: 2021:2025).
+# - cores: Integer specifying the number of parallel workers to use.
+#          If NULL, the function uses detectCores(logical = FALSE) - 4.
+#
+# Behavior:
+# - Initializes mirai daemon workers.
+# - Loads your custom utility functions into each daemon using mirai::everywhere().
+# - Executes import_nemsqa_data() and clean_names_dates_data() in parallel for each year.
+# - Combines all cleaned year-level tables into a single tibble.
+# - Shuts down all mirai daemon workers when complete.
 #
 # Requirements:
-# - The import_nemsqa_data() and clean_names_dates_data() functions must be defined
-#   in the global environment.
-# - The cli package is used for progress messaging.
+# - Custom functions required by the cleaning process must be sourced in the file
+#   "nemsqa_report_utils.2026" or otherwise loaded by mirai::everywhere().
+# - Packages used inside the worker must be explicitly referenced by namespace.
+# - Requires packages: mirai, parallel, cli, dplyr, nemsqar.
 load_nemsqa_parallel <- function(
   table,
   years = 2021:2025,
   cores = NULL
 ) {
-  # get total cores
-  total_cores <- parallel::detectCores(logical = F)
+  # Detect total physical cores for user messaging
+  total_cores <- parallel::detectCores(logical = FALSE)
 
-  # fallback if cores is not specified
+  # Choose parallel worker count if the user did not specify one
   if (is.null(cores)) {
-    cores <- parallel::detectCores(logical = FALSE) - 4
+    cores <- max(1, total_cores - 4)
   }
 
-  cli::cli_alert_info(
-    text = "Out of {total_cores} available, {cores} cores will be used for parallel processing."
-  )
-
+  # CLI reporting
   cli::cli_h2("Parallel NEMSQA Import via mirai")
   cli::cli_alert_info("Table: {table}")
   cli::cli_alert_info("Years: {paste(years, collapse = ', ')}")
   cli::cli_alert_info("Workers: {cores}")
+  cli::cli_alert_info(
+    text = "Out of {total_cores} available, {cores} cores will be used for parallel processing."
+  )
 
+  # Start mirai daemon processes
   mirai::daemons(n = cores)
 
+  # Load all custom functions inside each daemon session.
+  # This ensures clean_names_dates_data() and others are available.
+  mirai::everywhere(source("R/nemsqa_report_utils_2026.R"))
+
+  # Parallel import and cleaning using mirai_map
   out_list <- mirai::mirai_map(
     years,
+    # Worker function: runs inside each daemon
     \(yr, tab) {
+      # Import year-level table and clean locally
       import_nemsqa_data(table = tab, year = yr) |>
         clean_names_dates_data()
     },
     .args = list(tab = table)
-  )
+  )[.progress]
 
-  result <- dplyr::bind_rows(out_list[])
+  # Bind results into one tibble
+  out <- dplyr::bind_rows(out_list)
+
+  # Shutdown all daemon workers
   mirai::daemons(0)
-  return(result)
-}
 
+  return(out)
+}
 
 ### DATA VISUALIZATION FACILITIES ==============================================
 
