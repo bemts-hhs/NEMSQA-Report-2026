@@ -35,47 +35,48 @@ report_years <- 2021:2025
 #   "extrafont",
 #   "flextable",
 #   "mirai",
-#   "mori"
+#   "mori",
+#   "ggthemes"
 # ))
 
 # showtext setup ----
 
-# run showtext auto, use throughout project
-showtext::showtext_auto()
+# # run showtext auto, use throughout project
+# showtext::showtext_auto()
 
-# get 300 dpi with showtext
-showtext::showtext_opts(dpi = 300)
+# # get 300 dpi with showtext
+# showtext::showtext_opts(dpi = 300)
 
-# get work sans fonts of interest
-all_fonts <- systemfonts::system_fonts()
+# # get work sans fonts of interest
+# all_fonts <- systemfonts::system_fonts()
 
-# regular
-work_sans <- all_fonts |>
-  dplyr::filter(name == "WorkSans-Regular") |>
-  dplyr::pull(path)
+# # regular
+# work_sans <- all_fonts |>
+#   dplyr::filter(name == "WorkSans-Regular") |>
+#   dplyr::pull(path)
 
-# semibold
-work_sans_semibold <- all_fonts |>
-  dplyr::filter(name == "WorkSans-SemiBold") |>
-  dplyr::pull(path)
+# # semibold
+# work_sans_semibold <- all_fonts |>
+#   dplyr::filter(name == "WorkSans-SemiBold") |>
+#   dplyr::pull(path)
 
-# extrabold
-work_sans_extrabold <- all_fonts |>
-  dplyr::filter(name == "WorkSans-ExtraBold") |>
-  dplyr::pull(path)
+# # extrabold
+# work_sans_extrabold <- all_fonts |>
+#   dplyr::filter(name == "WorkSans-ExtraBold") |>
+#   dplyr::pull(path)
 
-# use sysfonts to load the fonts
-sysfonts::font_add(
-  family = "Work Sans",
-  regular = work_sans,
-  bold = work_sans_semibold
-)
+# # use sysfonts to load the fonts
+# sysfonts::font_add(
+#   family = "Work Sans",
+#   regular = work_sans,
+#   bold = work_sans_semibold
+# )
 
-sysfonts::font_add(
-  family = "Work Sans",
-  regular = work_sans,
-  bold = work_sans_extrabold
-)
+# sysfonts::font_add(
+#   family = "Work Sans",
+#   regular = work_sans,
+#   bold = work_sans_extrabold
+# )
 
 ###___________________________________________________________________________
 # Get location data

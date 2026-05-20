@@ -1487,8 +1487,7 @@ plot_nemsqa_pops <- function(
   df,
   wrap_width = 50,
   type = c("col", "line"),
-  plot_title,
-  ...
+  plot_title
 ) {
   # Add a helper variable to adjust text label positioning
   df <- df |>
@@ -1499,17 +1498,17 @@ plot_nemsqa_pops <- function(
 
   # Generate the base plot according to the selected type
   temp_plot <- if (type == "col") {
-    # Column chart: Displays count data grouped by YEAR
+    # Column chart: Displays count data grouped by Year
     ggplot2::ggplot(
       df,
-      ggplot2::aes(x = YEAR, y = count, fill = factor(YEAR))
+      ggplot2::aes(x = Year, y = count, fill = factor(Year))
     ) +
       ggplot2::geom_col(alpha = 0.5, position = ggplot2::position_dodge())
   } else {
     # Line chart: Shows trends across years with a connecting line
     ggplot2::ggplot(
       df,
-      ggplot2::aes(x = YEAR, y = count, color = "lightgray")
+      ggplot2::aes(x = Year, y = count, color = "lightgray")
     ) +
       ggplot2::geom_line(
         alpha = 0.5,
@@ -1524,16 +1523,16 @@ plot_nemsqa_pops <- function(
     ggplot2::geom_text(
       ggplot2::aes(
         y = count + nudge_var,
-        label = traumar::pretty_number(count, n_decimal = 2)
+        label = traumar::pretty_number(count, digits = 2)
       ),
-      size = 4,
+      size = 2,
       color = "darkslategray",
       fontface = "bold",
       family = "sans"
     ) +
     ggplot2::scale_y_continuous(
       labels = function(x) {
-        traumar::pretty_number(x, n_decimal = 2, truncate = TRUE)
+        traumar::pretty_number(x, digits = 2, truncate = F)
       }
     ) +
     ggplot2::guides(fill = "none", color = "none") +
@@ -1547,7 +1546,7 @@ plot_nemsqa_pops <- function(
       title = glue::glue("{plot_title} Population Trends"),
       subtitle = "Source: ImageTrend Elite EMS Registry | CY 2021-2025"
     ) +
-    traumar::theme_cleaner(...)
+    ggthemes::theme_clean()
 
   return(plot_pops)
 }
@@ -1968,10 +1967,10 @@ tab_style_hhs <- function(
 export_nemsqa_data <- function(
   pattern,
   measure,
-  folder = c("population", "result")
+  folder = c("population", "result", "missings")
 ) {
   # Validate folder selection
-  folder <- match.arg(folder, choices = c("population", "result"))
+  folder <- match.arg(folder, choices = c("population", "result", "missings"))
 
   # Get the secure file path
   output_file_path <- Sys.getenv("OUTPUT_FILE_PATH")

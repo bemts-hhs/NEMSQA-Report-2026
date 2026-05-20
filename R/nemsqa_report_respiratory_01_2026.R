@@ -184,24 +184,30 @@ respiratory_01_pop_years_init <- mirai::mirai_map(
   )
 )[.progress]
 
-# Unburden daemons
-mirai::daemons(0)
-
-# append years to the population and missingness files
+# append years to the population files
 respiratory_01_pop_years <- add_year_to_nested(
   x = respiratory_01_pop_years_init,
+  file = "filter_process",
   years = 2021:2025
 )
+
+# append years to the missingness files
+respiratory_01_missingness_years <- add_year_to_nested(
+  x = respiratory_01_pop_years_init,
+  file = "missingness",
+  years = 2021:2025
+)
+
+# remove the intermediary object
+rm(respiratory_01_pop_years_init)
+gc()
 
 # plot population trends over time
 respiratory_01_pop_years |>
   plot_nemsqa_pops(
     type = "col",
     wrap_width = 25,
-    plot_title = "Respiratory-01",
-    facets = TRUE,
-    vjust_title = 2,
-    vjust_subtitle = 1.5
+    plot_title = "Respiratory-01"
   )
 
 ### respiratory-01 results #####################################################
@@ -438,4 +444,12 @@ export_nemsqa_data(
   pattern = "respiratory_01_result",
   measure = "Respiratory-01",
   folder = "result"
+)
+
+### missingness exports ########################################################
+
+export_nemsqa_data(
+  pattern = "respiratory_01_missingness",
+  measure = "Respiratory-01",
+  folder = "missings"
 )
