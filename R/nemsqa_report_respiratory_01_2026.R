@@ -147,11 +147,14 @@ respiratory_01_pop <- nemsqar::respiratory_01_population(
 # population results for 2021-2025
 respiratory_01_pop_filter_process <- respiratory_01_pop$filter_process
 
+# missingness results for 2021-2025
+respiratory_01_missings <- respiratory_01_pop$missingness
+
 # set up daemons
 mirai::daemons(n = 13)
 
 # get respiratory_01 population data for each year using mirai and mori
-respiratory_01_pop_years <- mirai::mirai_map(
+respiratory_01_pop_years_init <- mirai::mirai_map(
   report_years,
   \(yr, ps, rsp, sit, vit) {
     nemsqar::respiratory_01_population(
@@ -183,6 +186,12 @@ respiratory_01_pop_years <- mirai::mirai_map(
 
 # Unburden daemons
 mirai::daemons(0)
+
+# append years to the population and missingness files
+respiratory_01_pop_years <- add_year_to_nested(
+  x = respiratory_01_pop_years_init,
+  years = 2021:2025
+)
 
 # plot population trends over time
 respiratory_01_pop_years |>

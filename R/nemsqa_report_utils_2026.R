@@ -686,6 +686,64 @@ prepare_map_data <- function(type = c("county", "state", "zcta")) {
 
 ### DATA MANIPULATION FACILITIES ===============================================
 
+#_______________________________________________________________________________
+# Function: add_year_to_nested()
+#_______________________________________________________________________________
+# This function appends a `Year` column to a specified nested tibble within
+# each parent element of a list. The list is assumed to contain sequential
+# yearly data (for example, 2021–2025), and each element contains a child
+# tibble referenced by `file`. After updating all nested tibbles, the function
+# extracts that same child tibble from every parent element and returns a
+# single row‑bound tibble.
+#
+# Arguments:
+#   - x: A list. Each parent element contains a nested tibble named in `file`.
+#   - file: Character. The name of the nested tibble to modify (for example,
+#           "filter_process" or "missingness").
+#   - years: Integer vector. Years assigned to each parent list element.
+#            Must be the same length as `x`. Default is 2021:2025.
+#
+# Returns:
+#   - A tibble created by row‑binding the updated nested tibbles extracted
+#     from each parent element of the list after the `Year` field is added.
+#
+# Notes:
+#   - Uses {dplyr} for mutation and row binding.
+#   - The function does not return the updated list; it returns only the
+#     combined tibble for downstream analysis.
+#_______________________________________________________________________________
+
+add_year_to_nested <- function(x, file, years = 2021:2025) {
+  # Validate lengths -----------------------------------------------------------
+  if (length(x) != length(years)) {
+    stop("Length of `years` must match length of list `x`.")
+  }
+
+  # Iterate over each parent list element -------------------------------------
+  update <- Map(
+    f = function(parent_element, file, yr) {
+      # Modify only the two known child elements ------------------------------
+      parent_element[[file]] <-
+        parent_element[[file]] |>
+        dplyr::mutate(Year = yr)
+
+      # Return updated parent element -----------------------------------------
+      parent_element
+    },
+    parent_element = x,
+    file = file,
+    yr = years
+  )
+
+  # pull the list element of interest and bind rows
+  out <- update |>
+    lapply(X = _, FUN = \(el) el[[file]]) |>
+    dplyr::bind_rows()
+
+  # End the function
+  return(out)
+}
+
 #_____________________________________________________________________________
 # Function: format_cut_levels()
 #_____________________________________________________________________________
@@ -1087,6 +1145,9 @@ load_nemsqa_parallel <- function(
   years = 2021:2025,
   cores = NULL
 ) {
+  # record the start time
+  start_time <- Sys.time()
+
   # Detect total physical cores for user messaging
   total_cores <- parallel::detectCores(logical = FALSE)
 
@@ -1104,7 +1165,7 @@ load_nemsqa_parallel <- function(
   cli::cli_alert_info("Years: {paste(years, collapse = ', ')}")
   cli::cli_alert_info("Workers: {cores}")
   cli::cli_alert_info(
-    text = "Out of {total_cores} available, {cores} ({percent_cores}) cores will be used for parallel processing."
+    text = "Out of {total_cores} available, {cores} ({percent_cores}) cores will be used for parallel processing.\n"
   )
 
   # Start mirai daemon processes
@@ -1129,9 +1190,34 @@ load_nemsqa_parallel <- function(
   # Bind results into one tibble
   out <- dplyr::bind_rows(out_list)
 
+  # Get total rows loaded
+  loaded_rows <- nrow(out)
+
+  # Get object size
+  object_size <- object.size(out)
+
   # Shutdown all daemon workers
   mirai::daemons(0)
 
+  # record the end time
+  end_time <- Sys.time()
+
+  # Get total wall clock time for the procedure
+  clock_time <- difftime(
+    time1 = end_time,
+    time2 = start_time,
+    units = "auto"
+  )
+
+  # Get units
+  clock_units <- attr(x = clock_time, which = "units")
+
+  # Report the total time taken
+  cli::cli_alert_success(
+    text = "{.fn load_nemsqa_parallel} took {sprintf('%.1f %s', clock_time, clock_units)} to load {traumar::pretty_number(x = loaded_rows, digits = 1)} rows with in-memory size {format(object.size(x = out), units = 'auto')}."
+  )
+
+  # Exit the function
   return(out)
 }
 
