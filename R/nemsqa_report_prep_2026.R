@@ -10,6 +10,9 @@
 # report years
 report_years <- 2021:2025
 
+# report regions
+report_regions <- c("1A", "1C", as.character(c(2:7)))
+
 ### PACKAGES -------------------------------------------------------------------
 
 # CRAN versions ================================================================
@@ -112,6 +115,9 @@ location <-
       FALSE
     )
   )
+
+# counties
+report_counties <- c(unique(location$County), "OOS or Missing")
 
 # zipcode level data
 zipcodes <- zipcodeR::zip_code_db |>

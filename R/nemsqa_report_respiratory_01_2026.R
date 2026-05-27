@@ -13,7 +13,7 @@
 # tables imported in alphabetical order
 # tables do not need to be loaded again if already in memory
 
-### patient/scene tables #######################################################
+# patient/scene tables ---------------------------------------------------
 
 # Utilize mirai for asynchronous loading
 # automatically bind rows
@@ -81,12 +81,20 @@ patient_scene_table <- patient_scene_clean |>
     external_city = Iowa_Data_Final$name_city,
     external_county = county_data$County,
     external_region = county_data$`Region: Preparedness`
+  ) |>
+  dplyr::mutate(
+    State_Iowa = grepl(
+      "(?:iowa$|^ia.*$|^ia$)",
+      SCENE_INCIDENT_STATE_NAME_E_SCENE_18,
+      ignore.case = TRUE
+    )
   )
 
 # share the patient_scene_table
 patient_scene_table_s <- mori::share(patient_scene_table)
 
-### response tables ############################################################
+# response tables --------------------------------------------------------
+
 # set up response table for manipulations
 response_table <- load_nemsqa_parallel(
   table = "response",
@@ -97,7 +105,7 @@ response_table <- load_nemsqa_parallel(
 # share the response table
 response_table_s <- mori::share(response_table)
 
-### situation tables #############################################################
+# situation tables -------------------------------------------------------
 # set up situation table for manipulations
 situation_table <- load_nemsqa_parallel(
   table = "situation",
@@ -108,7 +116,8 @@ situation_table <- load_nemsqa_parallel(
 # Share the situation_table
 situation_table_s <- mori::share(situation_table)
 
-### vitals tables ################################################################
+
+# vitals tables ----------------------------------------------------------
 # set up vitals table for manipulations
 vitals_table <- load_nemsqa_parallel(
   table = "vitals",
@@ -449,7 +458,7 @@ export_nemsqa_data(
 ### missingness exports ########################################################
 
 export_nemsqa_data(
-  pattern = "respiratory_01_missingness",
+  pattern = "respiratory_01_missingness|respiratory_01_missings",
   measure = "Respiratory-01",
   folder = "missings"
 )

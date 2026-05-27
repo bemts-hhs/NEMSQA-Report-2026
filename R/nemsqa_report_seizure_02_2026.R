@@ -109,8 +109,14 @@ patient_scene_table <- patient_scene_clean |>
     external_city = Iowa_Data_Final$name_city,
     external_county = county_data$County,
     external_region = county_data$`Region: Preparedness`
+  ) |>
+  dplyr::mutate(
+    State_Iowa = grepl(
+      "(?:iowa$|^ia.*$|^ia$)",
+      SCENE_INCIDENT_STATE_NAME_E_SCENE_18,
+      ignore.case = TRUE
+    )
   )
-
 
 ### response tables ##############################################################
 response_2021 <- import_nemsqa_data(table = "response", year = 2021)
