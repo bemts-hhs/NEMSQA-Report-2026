@@ -519,6 +519,80 @@ airway_01_result_counties <- nemsqar::airway_01(
     )
   )
 
+# start time counties / years
+start_result_counties_years <- Sys.time()
+
+# counties
+airway_01_result_counties_years <- mirai::mirai_map(
+  report_years,
+  \(yr, ps, rsp, arr, pro, vit) {
+    # parallelize by year
+    ps_y <- ps |> dplyr::filter(INCIDENT_YEAR == yr)
+
+    # run the function in parallel
+    nemsqar::airway_01(
+      df = NULL,
+      patient_scene_table = ps_y,
+      response_table = rsp,
+      arrest_table = arr,
+      procedures_table = pro,
+      vitals_table = vit,
+      erecord_01_col = FACT_INCIDENT_PK,
+      incident_date_col = INCIDENT_DATE,
+      patient_DOB_col = PATIENT_DATE_OF_BIRTH_E_PATIENT_17,
+      epatient_15_col = PATIENT_AGE_E_PATIENT_15,
+      epatient_16_col = PATIENT_AGE_UNITS_E_PATIENT_16,
+      earrest_01_col = CARDIAC_ARREST_DURING_EMS_EVENT_WITH_CODE_E_ARREST_01,
+      eresponse_05_col = RESPONSE_TYPE_OF_SERVICE_REQUESTED_WITH_CODE_E_RESPONSE_05,
+      evitals_01_col = VITALS_SIGNS_TAKEN_DATE_TIME_E_VITALS_01,
+      evitals_06_col = VITALS_SYSTOLIC_BLOOD_PRESSURE_SBP_E_VITALS_06,
+      evitals_12_col = VITALS_PULSE_OXIMETRY_E_VITALS_12,
+      eprocedures_01_col = PROCEDURE_PERFORMED_DATE_TIME_E_PROCEDURES_01,
+      eprocedures_02_col = PROCEDURE_PERFORMED_PRIOR_TO_EMS_CARE_E_PROCEDURES_02,
+      eprocedures_03_col = PROCEDURE_PERFORMED_DESCRIPTION_AND_CODE_E_PROCEDURES_03,
+      eprocedures_05_col = PROCEDURE_NUMBER_OF_ATTEMPTS_E_PROCEDURES_05,
+      eprocedures_06_col = PROCEDURE_SUCCESSFUL_E_PROCEDURES_06,
+      confidence_interval = TRUE,
+      method = "w",
+      conf.level = 0.95,
+      correct = TRUE,
+      .by = c(INCIDENT_YEAR, SCENE_INCIDENT_COUNTY_NAME_E_SCENE_21)
+    )
+  },
+  .args = list(
+    ps = patient_scene_table_s,
+    rsp = response_table_s,
+    arr = arrest_table_s,
+    pro = procedures_table_s,
+    vit = vitals_table_s
+  )
+)[.progress] |>
+  dplyr::bind_rows() |>
+  tidyr::complete(
+    INCIDENT_YEAR,
+    SCENE_INCIDENT_COUNTY_NAME_E_SCENE_21,
+    measure,
+    pop,
+    fill = list(
+      numerator = 0,
+      denominator = 0,
+      prop = NA_real_,
+      prop_label = NA_character_,
+      lower_ci = NA_real_,
+      upper_ci = NA_real_
+    )
+  )
+
+# get end time
+end_result_counties_years <- Sys.time()
+
+# total time
+time_result_counties_years <- difftime(
+  end_result_counties_years,
+  start_result_counties_years,
+  units = "auto"
+)
+
 # overall
 airway_01_result_overall <- nemsqar::airway_01(
   df = NULL,
@@ -624,7 +698,6 @@ time_result_services <- difftime(
 
 # unburden daemons
 mirai::daemons(n = 0)
-
 
 ### EXPORT =====================================================================
 
