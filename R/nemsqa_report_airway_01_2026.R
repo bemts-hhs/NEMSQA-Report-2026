@@ -174,7 +174,7 @@ airway_01_pop <- nemsqar::airway_01_population(
 # population results for 2021-2025
 airway_01_pop_filter_process <- airway_01_pop$filter_process
 
-# population results for 2021-2025
+# missingness results for 2021-2025
 airway_01_missings <- airway_01_pop$missingness
 
 # set up daemons
