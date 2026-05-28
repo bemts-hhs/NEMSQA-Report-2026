@@ -88,6 +88,11 @@ patient_scene_table <- patient_scene_clean |>
       SCENE_INCIDENT_STATE_NAME_E_SCENE_18,
       ignore.case = TRUE
     )
+  ) |>
+  dplyr::mutate(
+    SCENE_INCIDENT_COUNTY_NAME_E_SCENE_21 = factor(
+      SCENE_INCIDENT_COUNTY_NAME_E_SCENE_21
+    )
   )
 
 # share the patient_scene_table
@@ -221,28 +226,60 @@ respiratory_01_pop_years |>
 
 ### respiratory-01 results #####################################################
 
+# benchmark time - start
+start_result_year <- Sys.time()
+
 # year
-respiratory_01_result_year <- nemsqar::respiratory_01(
-  df = NULL,
-  patient_scene_table = patient_scene_table,
-  response_table = response_table,
-  situation_table = situation_table,
-  vitals_table = vitals_table,
-  erecord_01_col = FACT_INCIDENT_PK,
-  incident_date_col = INCIDENT_DATE,
-  patient_DOB_col = PATIENT_DATE_OF_BIRTH_E_PATIENT_17,
-  epatient_15_col = PATIENT_AGE_E_PATIENT_15,
-  epatient_16_col = PATIENT_AGE_UNITS_E_PATIENT_16,
-  eresponse_05_col = RESPONSE_TYPE_OF_SERVICE_REQUESTED_WITH_CODE_E_RESPONSE_05,
-  esituation_11_col = SITUATION_PROVIDER_PRIMARY_IMPRESSION_CODE_AND_DESCRIPTION_E_SITUATION_11,
-  esituation_12_col = SITUATION_PROVIDER_SECONDARY_IMPRESSION_DESCRIPTION_AND_CODE_E_SITUATION_12,
-  evitals_12_col = VITALS_PULSE_OXIMETRY_E_VITALS_12,
-  evitals_14_col = VITALS_RESPIRATORY_RATE_E_VITALS_14,
-  confidence_interval = TRUE,
-  method = "w",
-  conf.level = 0.95,
-  correct = TRUE,
-  .by = INCIDENT_YEAR
+respiratory_01_result_year <- mirai::mirai_map(
+  report_years,
+  \(yr, ps, rsp, sit, vit) {
+    # parallelize over the years
+    ps_y <- ps |> dplyr::filter(INCIDENT_YEAR == yr)
+    rsp_y <- rsp |> dplyr::filter(INCIDENT_YEAR == yr)
+    sit_y <- sit |> dplyr::filter(INCIDENT_YEAR == yr)
+    vit_y <- vit |> dplyr::filter(INCIDENT_YEAR == yr)
+
+    # run the function in parallel
+    nemsqar::respiratory_01(
+      df = NULL,
+      patient_scene_table = ps_y,
+      response_table = rsp_y,
+      situation_table = sit_y,
+      vitals_table = vit_y,
+      erecord_01_col = FACT_INCIDENT_PK,
+      incident_date_col = INCIDENT_DATE,
+      patient_DOB_col = PATIENT_DATE_OF_BIRTH_E_PATIENT_17,
+      epatient_15_col = PATIENT_AGE_E_PATIENT_15,
+      epatient_16_col = PATIENT_AGE_UNITS_E_PATIENT_16,
+      eresponse_05_col = RESPONSE_TYPE_OF_SERVICE_REQUESTED_WITH_CODE_E_RESPONSE_05,
+      esituation_11_col = SITUATION_PROVIDER_PRIMARY_IMPRESSION_CODE_AND_DESCRIPTION_E_SITUATION_11,
+      esituation_12_col = SITUATION_PROVIDER_SECONDARY_IMPRESSION_DESCRIPTION_AND_CODE_E_SITUATION_12,
+      evitals_12_col = VITALS_PULSE_OXIMETRY_E_VITALS_12,
+      evitals_14_col = VITALS_RESPIRATORY_RATE_E_VITALS_14,
+      confidence_interval = TRUE,
+      method = "w",
+      conf.level = 0.95,
+      correct = TRUE,
+      .by = INCIDENT_YEAR
+    )
+  },
+  .args = list(
+    ps = patient_scene_table_s,
+    rsp = response_table_s,
+    sit = situation_table_s,
+    vit = vitals_table_s
+  )
+)[.progress] |> 
+  dplyr::bind_rows()
+
+# benchmark time - end
+end_result_year <- Sys.time()
+
+# benchmark time diff
+time_result_year <- difftime(
+  time1 = end_result_year,
+  time2 = start_result_year,
+  units = "auto"
 )
 
 # regions and years

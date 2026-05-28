@@ -116,6 +116,11 @@ patient_scene_table <- patient_scene_clean |>
       SCENE_INCIDENT_STATE_NAME_E_SCENE_18,
       ignore.case = TRUE
     )
+  ) |>
+  dplyr::mutate(
+    SCENE_INCIDENT_COUNTY_NAME_E_SCENE_21 = factor(
+      SCENE_INCIDENT_COUNTY_NAME_E_SCENE_21
+    )
   )
 
 ### response tables ##############################################################

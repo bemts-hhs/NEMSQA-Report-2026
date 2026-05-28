@@ -174,122 +174,74 @@ airway_05_pop_filter_process <- airway_05_pop$filter_process
 # missingness results for 2021-2025
 airway_05_pop_filter_process <- airway_05_pop$missingness
 
+# track progress
+start <- Sys.time()
 
-# 2021
-airway_05_pop_2021 <- nemsqar::airway_05_population(
-  df = NULL,
-  patient_scene_table = patient_scene_table |>
-    dplyr::filter(INCIDENT_YEAR == 2021),
-  response_table = response_table |> dplyr::filter(INCIDENT_YEAR == 2021),
-  arrest_table = arrest_table |> dplyr::filter(INCIDENT_YEAR == 2021),
-  procedures_table = procedures_table |> dplyr::filter(INCIDENT_YEAR == 2021),
-  vitals_table = vitals_table |> dplyr::filter(INCIDENT_YEAR == 2021),
-  erecord_01_col = FACT_INCIDENT_PK,
-  incident_date_col = INCIDENT_DATE,
-  patient_DOB_col = PATIENT_DATE_OF_BIRTH_E_PATIENT_17,
-  epatient_15_col = PATIENT_AGE_E_PATIENT_15,
-  epatient_16_col = PATIENT_AGE_UNITS_E_PATIENT_16,
-  earrest_01_col = CARDIAC_ARREST_DURING_EMS_EVENT_WITH_CODE_E_ARREST_01,
-  eresponse_05_col = RESPONSE_TYPE_OF_SERVICE_REQUESTED_WITH_CODE_E_RESPONSE_05,
-  evitals_01_col = VITALS_SIGNS_TAKEN_DATE_TIME_E_VITALS_01,
-  evitals_12_col = VITALS_PULSE_OXIMETRY_E_VITALS_12,
-  eprocedures_01_col = PROCEDURE_PERFORMED_DATE_TIME_E_PROCEDURES_01,
-  eprocedures_02_col = PROCEDURE_PERFORMED_PRIOR_TO_EMS_CARE_E_PROCEDURES_02,
-  eprocedures_03_col = PROCEDURE_PERFORMED_DESCRIPTION_AND_CODE_E_PROCEDURES_03
+# get airway_015population data for each year using mirai and mori
+airway_05_pop_years_init <- mirai::mirai_map(
+  report_years,
+  \(yr, ps, rsp, arr, pro, vit) {
+    # parallelize by year
+    ps_y <- ps |> dplyr::filter(INCIDENT_YEAR == yr)
+    rsp_y <- rsp |> dplyr::filter(INCIDENT_YEAR == yr)
+    arr_y <- arr |> dplyr::filter(INCIDENT_YEAR == yr)
+    pro_y <- pro |> dplyr::filter(INCIDENT_YEAR == yr)
+    vit_y <- vit |> dplyr::filter(INCIDENT_YEAR == yr)
+
+    # run function in parallel
+    nemsqar::airway_05_population(
+      df = NULL,
+      patient_scene_table = ps_y,
+      response_table = rsp_y,
+      arrest_table = arr_y,
+      procedures_table = pro_y,
+      vitals_table = vit_y,
+      erecord_01_col = FACT_INCIDENT_PK,
+      incident_date_col = INCIDENT_DATE,
+      patient_DOB_col = PATIENT_DATE_OF_BIRTH_E_PATIENT_17,
+      epatient_15_col = PATIENT_AGE_E_PATIENT_15,
+      epatient_16_col = PATIENT_AGE_UNITS_E_PATIENT_16,
+      earrest_01_col = CARDIAC_ARREST_DURING_EMS_EVENT_WITH_CODE_E_ARREST_01,
+      eresponse_05_col = RESPONSE_TYPE_OF_SERVICE_REQUESTED_WITH_CODE_E_RESPONSE_05,
+      evitals_01_col = VITALS_SIGNS_TAKEN_DATE_TIME_E_VITALS_01,
+      evitals_12_col = VITALS_PULSE_OXIMETRY_E_VITALS_12,
+      eprocedures_01_col = PROCEDURE_PERFORMED_DATE_TIME_E_PROCEDURES_01,
+      eprocedures_02_col = PROCEDURE_PERFORMED_PRIOR_TO_EMS_CARE_E_PROCEDURES_02,
+      eprocedures_03_col = PROCEDURE_PERFORMED_DESCRIPTION_AND_CODE_E_PROCEDURES_03
+    )
+  },
+  .args = list(
+    ps = patient_scene_table_s,
+    rsp = response_table_s,
+    arr = arrest_table_s,
+    pro = procedures_table_s,
+    vit = vitals_table_s
+  )
+)[.progress]
+
+# Get end time
+end <- Sys.time()
+
+# Get total time
+time <- difftime(time1 = end, time2 = start, units = "auto")
+
+# append years to the population files
+airway_05_pop_years <- add_year_to_nested(
+  x = airway_015pop_years_init,
+  file = "filter_process",
+  years = 2021:2025
 )
 
-# population results for 2021
-airway_05_pop_filter_process_2021 <- airway_05_pop_2021$filter_process |>
-  dplyr::mutate(YEAR = 2021)
-
-# 2022
-airway_05_pop_2022 <- nemsqar::airway_05_population(
-  df = NULL,
-  patient_scene_table = patient_scene_table |>
-    dplyr::filter(INCIDENT_YEAR == 2022),
-  response_table = response_table |> dplyr::filter(INCIDENT_YEAR == 2022),
-  arrest_table = arrest_table |> dplyr::filter(INCIDENT_YEAR == 2022),
-  procedures_table = procedures_table |> dplyr::filter(INCIDENT_YEAR == 2022),
-  vitals_table = vitals_table |> dplyr::filter(INCIDENT_YEAR == 2022),
-  erecord_01_col = FACT_INCIDENT_PK,
-  incident_date_col = INCIDENT_DATE,
-  patient_DOB_col = PATIENT_DATE_OF_BIRTH_E_PATIENT_17,
-  epatient_15_col = PATIENT_AGE_E_PATIENT_15,
-  epatient_16_col = PATIENT_AGE_UNITS_E_PATIENT_16,
-  earrest_01_col = CARDIAC_ARREST_DURING_EMS_EVENT_WITH_CODE_E_ARREST_01,
-  eresponse_05_col = RESPONSE_TYPE_OF_SERVICE_REQUESTED_WITH_CODE_E_RESPONSE_05,
-  evitals_01_col = VITALS_SIGNS_TAKEN_DATE_TIME_E_VITALS_01,
-  evitals_12_col = VITALS_PULSE_OXIMETRY_E_VITALS_12,
-  eprocedures_01_col = PROCEDURE_PERFORMED_DATE_TIME_E_PROCEDURES_01,
-  eprocedures_02_col = PROCEDURE_PERFORMED_PRIOR_TO_EMS_CARE_E_PROCEDURES_02,
-  eprocedures_03_col = PROCEDURE_PERFORMED_DESCRIPTION_AND_CODE_E_PROCEDURES_03
+# append years to the missingness files
+airway_05_missingness_years <- add_year_to_nested(
+  x = airway_05_pop_years_init,
+  file = "missingness",
+  years = 2021:2025
 )
 
-# population results for 2022
-airway_05_pop_filter_process_2022 <- airway_05_pop_2022$filter_process |>
-  dplyr::mutate(YEAR = 2022)
-
-# 2023
-airway_05_pop_2023 <- nemsqar::airway_05_population(
-  df = NULL,
-  patient_scene_table = patient_scene_table |>
-    dplyr::filter(INCIDENT_YEAR == 2023),
-  response_table = response_table |> dplyr::filter(INCIDENT_YEAR == 2023),
-  arrest_table = arrest_table |> dplyr::filter(INCIDENT_YEAR == 2023),
-  procedures_table = procedures_table |> dplyr::filter(INCIDENT_YEAR == 2023),
-  vitals_table = vitals_table |> dplyr::filter(INCIDENT_YEAR == 2023),
-  erecord_01_col = FACT_INCIDENT_PK,
-  incident_date_col = INCIDENT_DATE,
-  patient_DOB_col = PATIENT_DATE_OF_BIRTH_E_PATIENT_17,
-  epatient_15_col = PATIENT_AGE_E_PATIENT_15,
-  epatient_16_col = PATIENT_AGE_UNITS_E_PATIENT_16,
-  earrest_01_col = CARDIAC_ARREST_DURING_EMS_EVENT_WITH_CODE_E_ARREST_01,
-  eresponse_05_col = RESPONSE_TYPE_OF_SERVICE_REQUESTED_WITH_CODE_E_RESPONSE_05,
-  evitals_01_col = VITALS_SIGNS_TAKEN_DATE_TIME_E_VITALS_01,
-  evitals_12_col = VITALS_PULSE_OXIMETRY_E_VITALS_12,
-  eprocedures_01_col = PROCEDURE_PERFORMED_DATE_TIME_E_PROCEDURES_01,
-  eprocedures_02_col = PROCEDURE_PERFORMED_PRIOR_TO_EMS_CARE_E_PROCEDURES_02,
-  eprocedures_03_col = PROCEDURE_PERFORMED_DESCRIPTION_AND_CODE_E_PROCEDURES_03
-)
-
-# population results for 2023
-airway_05_pop_filter_process_2023 <- airway_05_pop_2023$filter_process |>
-  dplyr::mutate(YEAR = 2023)
-
-# 2024
-airway_05_pop_2024 <- nemsqar::airway_05_population(
-  df = NULL,
-  patient_scene_table = patient_scene_table |>
-    dplyr::filter(INCIDENT_YEAR == 2024),
-  response_table = response_table |> dplyr::filter(INCIDENT_YEAR == 2024),
-  arrest_table = arrest_table |> dplyr::filter(INCIDENT_YEAR == 2024),
-  procedures_table = procedures_table |> dplyr::filter(INCIDENT_YEAR == 2024),
-  vitals_table = vitals_table |> dplyr::filter(INCIDENT_YEAR == 2024),
-  erecord_01_col = FACT_INCIDENT_PK,
-  incident_date_col = INCIDENT_DATE,
-  patient_DOB_col = PATIENT_DATE_OF_BIRTH_E_PATIENT_17,
-  epatient_15_col = PATIENT_AGE_E_PATIENT_15,
-  epatient_16_col = PATIENT_AGE_UNITS_E_PATIENT_16,
-  earrest_01_col = CARDIAC_ARREST_DURING_EMS_EVENT_WITH_CODE_E_ARREST_01,
-  eresponse_05_col = RESPONSE_TYPE_OF_SERVICE_REQUESTED_WITH_CODE_E_RESPONSE_05,
-  evitals_01_col = VITALS_SIGNS_TAKEN_DATE_TIME_E_VITALS_01,
-  evitals_12_col = VITALS_PULSE_OXIMETRY_E_VITALS_12,
-  eprocedures_01_col = PROCEDURE_PERFORMED_DATE_TIME_E_PROCEDURES_01,
-  eprocedures_02_col = PROCEDURE_PERFORMED_PRIOR_TO_EMS_CARE_E_PROCEDURES_02,
-  eprocedures_03_col = PROCEDURE_PERFORMED_DESCRIPTION_AND_CODE_E_PROCEDURES_03
-)
-
-# population results for 2024
-airway_05_pop_filter_process_2024 <- airway_05_pop_2024$filter_process |>
-  dplyr::mutate(YEAR = 2024)
-
-# airway-05 populations over the years
-airway_05_pop_years <- dplyr::bind_rows(
-  airway_05_pop_filter_process_2021,
-  airway_05_pop_filter_process_2022,
-  airway_05_pop_filter_process_2023,
-  airway_05_pop_filter_process_2024
-)
+# remove the intermediary object
+rm(airway_01_pop_years_init)
+gc()
 
 # plot population trends over time
 airway_05_pop_years |>
