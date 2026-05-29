@@ -146,7 +146,8 @@ vitals_table_s <- mori::share(vitals_table)
 
 ### airway-05 populations ########################################################
 
-# over all years 2021-2025
+# populations over all years 2021-2025 -----------------------------------
+
 airway_05_pop <- nemsqar::airway_05_population(
   df = NULL,
   patient_scene_table = patient_scene_table,
@@ -172,12 +173,13 @@ airway_05_pop <- nemsqar::airway_05_population(
 airway_05_pop_filter_process <- airway_05_pop$filter_process
 
 # missingness results for 2021-2025
-airway_05_pop_filter_process <- airway_05_pop$missingness
+airway_05_pop_missings <- airway_05_pop$missingness
+
+# get airway_05_population data for each year using mirai and mori -------
 
 # track progress
-start <- Sys.time()
+tictoc::tic(msg = "airway_05_pop_years_init")
 
-# get airway_015population data for each year using mirai and mori
 airway_05_pop_years_init <- mirai::mirai_map(
   report_years,
   \(yr, ps, rsp, arr, pro, vit) {
@@ -219,15 +221,12 @@ airway_05_pop_years_init <- mirai::mirai_map(
   )
 )[.progress]
 
-# Get end time
-end <- Sys.time()
-
 # Get total time
-time <- difftime(time1 = end, time2 = start, units = "auto")
+time <- tictoc::toc()
 
 # append years to the population files
 airway_05_pop_years <- add_year_to_nested(
-  x = airway_015pop_years_init,
+  x = airway_05_pop_years_init,
   file = "filter_process",
   years = 2021:2025
 )
@@ -239,76 +238,125 @@ airway_05_missingness_years <- add_year_to_nested(
   years = 2021:2025
 )
 
-# remove the intermediary object
-rm(airway_01_pop_years_init)
-gc()
-
 # plot population trends over time
 airway_05_pop_years |>
   plot_nemsqa_pops(
     type = "col",
     wrap_width = 25,
-    plot_title = "Airway-05",
-    facets = TRUE,
-    vjust_title = 2,
-    vjust_subtitle = 1.5
+    plot_title = "Airway-05"
   )
 
 ### airway-05 results ############################################################
 
+# results years ----------------------------------------------------------
+
+# get start time
+tictoc::tic(msg = "airway_05_result_year")
+
 # year
-airway_05_result_year <- nemsqar::airway_05(
-  df = NULL,
-  patient_scene_table = patient_scene_table,
-  response_table = response_table,
-  arrest_table = arrest_table,
-  procedures_table = procedures_table,
-  vitals_table = vitals_table,
-  erecord_01_col = UNIQUE_RUN_ID,
-  incident_date_col = INCIDENT_DATE,
-  patient_DOB_col = PATIENT_DATE_OF_BIRTH_E_PATIENT_17,
-  epatient_15_col = PATIENT_AGE_E_PATIENT_15,
-  epatient_16_col = PATIENT_AGE_UNITS_E_PATIENT_16,
-  earrest_01_col = CARDIAC_ARREST_DURING_EMS_EVENT_WITH_CODE_E_ARREST_01,
-  eresponse_05_col = RESPONSE_TYPE_OF_SERVICE_REQUESTED_WITH_CODE_E_RESPONSE_05,
-  evitals_01_col = VITALS_SIGNS_TAKEN_DATE_TIME_E_VITALS_01,
-  evitals_12_col = VITALS_PULSE_OXIMETRY_E_VITALS_12,
-  eprocedures_01_col = PROCEDURE_PERFORMED_DATE_TIME_E_PROCEDURES_01,
-  eprocedures_02_col = PROCEDURE_PERFORMED_PRIOR_TO_EMS_CARE_E_PROCEDURES_02,
-  eprocedures_03_col = PROCEDURE_PERFORMED_DESCRIPTION_AND_CODE_E_PROCEDURES_03,
-  confidence_interval = TRUE,
-  method = "w",
-  conf.level = 0.95,
-  correct = TRUE,
-  .by = INCIDENT_YEAR
-)
+airway_05_result_year <- mirai::mirai_map(
+  report_years,
+  \(yr, ps, rsp, arr, pro, vit) {
+    # parallelize region work
+    ps_y <- ps |> dplyr::filter(INCIDENT_YEAR == yr)
+    rsp_y <- rsp |> dplyr::filter(INCIDENT_YEAR == yr)
+    arr_y <- arr |> dplyr::filter(INCIDENT_YEAR == yr)
+    pro_y <- pro |> dplyr::filter(INCIDENT_YEAR == yr)
+    vit_y <- vit |> dplyr::filter(INCIDENT_YEAR == yr)
+
+    # run the function in parallel
+    nemsqar::airway_05(
+      df = NULL,
+      patient_scene_table = ps_y,
+      response_table = rsp_y,
+      arrest_table = arr_y,
+      procedures_table = pro_y,
+      vitals_table = vit_y,
+      erecord_01_col = UNIQUE_RUN_ID,
+      incident_date_col = INCIDENT_DATE,
+      patient_DOB_col = PATIENT_DATE_OF_BIRTH_E_PATIENT_17,
+      epatient_15_col = PATIENT_AGE_E_PATIENT_15,
+      epatient_16_col = PATIENT_AGE_UNITS_E_PATIENT_16,
+      earrest_01_col = CARDIAC_ARREST_DURING_EMS_EVENT_WITH_CODE_E_ARREST_01,
+      eresponse_05_col = RESPONSE_TYPE_OF_SERVICE_REQUESTED_WITH_CODE_E_RESPONSE_05,
+      evitals_01_col = VITALS_SIGNS_TAKEN_DATE_TIME_E_VITALS_01,
+      evitals_12_col = VITALS_PULSE_OXIMETRY_E_VITALS_12,
+      eprocedures_01_col = PROCEDURE_PERFORMED_DATE_TIME_E_PROCEDURES_01,
+      eprocedures_02_col = PROCEDURE_PERFORMED_PRIOR_TO_EMS_CARE_E_PROCEDURES_02,
+      eprocedures_03_col = PROCEDURE_PERFORMED_DESCRIPTION_AND_CODE_E_PROCEDURES_03,
+      confidence_interval = TRUE,
+      method = "w",
+      conf.level = 0.95,
+      correct = TRUE,
+      .by = INCIDENT_YEAR
+    )
+  },
+  .args = list(
+    ps = patient_scene_table_s,
+    rsp = response_table_s,
+    arr = arrest_table_s,
+    pro = procedures_table_s,
+    vit = vitals_table_s
+  )
+)[.progress] |>
+  dplyr::bind_rows()
+
+# total time
+time_result_year <- tictoc::toc()
+
+
+# results regions and years ----------------------------------------------
+
+# get start time
+tictoc::tic(msg = "airway_05_result_regions_year")
 
 # regions and years
-airway_05_result_regions_years <- nemsqar::airway_05(
-  df = NULL,
-  patient_scene_table = patient_scene_table,
-  response_table = response_table,
-  arrest_table = arrest_table,
-  procedures_table = procedures_table,
-  vitals_table = vitals_table,
-  erecord_01_col = FACT_INCIDENT_PK,
-  incident_date_col = INCIDENT_DATE,
-  patient_DOB_col = PATIENT_DATE_OF_BIRTH_E_PATIENT_17,
-  epatient_15_col = PATIENT_AGE_E_PATIENT_15,
-  epatient_16_col = PATIENT_AGE_UNITS_E_PATIENT_16,
-  earrest_01_col = CARDIAC_ARREST_DURING_EMS_EVENT_WITH_CODE_E_ARREST_01,
-  eresponse_05_col = RESPONSE_TYPE_OF_SERVICE_REQUESTED_WITH_CODE_E_RESPONSE_05,
-  evitals_01_col = VITALS_SIGNS_TAKEN_DATE_TIME_E_VITALS_01,
-  evitals_12_col = VITALS_PULSE_OXIMETRY_E_VITALS_12,
-  eprocedures_01_col = PROCEDURE_PERFORMED_DATE_TIME_E_PROCEDURES_01,
-  eprocedures_02_col = PROCEDURE_PERFORMED_PRIOR_TO_EMS_CARE_E_PROCEDURES_02,
-  eprocedures_03_col = PROCEDURE_PERFORMED_DESCRIPTION_AND_CODE_E_PROCEDURES_03,
-  confidence_interval = TRUE,
-  method = "w",
-  conf.level = 0.95,
-  correct = TRUE,
-  .by = c(INCIDENT_YEAR, `Region: Preparedness`)
-) |>
+airway_05_result_regions_years <- mirai::mirai_map(
+  report_years,
+  \(yr, ps, rsp, arr, pro, vit) {
+    # parallelize region work
+    ps_y <- ps |> dplyr::filter(INCIDENT_YEAR == yr)
+    rsp_y <- rsp |> dplyr::filter(INCIDENT_YEAR == yr)
+    arr_y <- arr |> dplyr::filter(INCIDENT_YEAR == yr)
+    pro_y <- pro |> dplyr::filter(INCIDENT_YEAR == yr)
+    vit_y <- vit |> dplyr::filter(INCIDENT_YEAR == yr)
+
+    # run the function in parallel
+    nemsqar::airway_05(
+      df = NULL,
+      patient_scene_table = ps_y,
+      response_table = rsp_y,
+      arrest_table = arr_y,
+      procedures_table = pro_y,
+      vitals_table = vit_y,
+      erecord_01_col = FACT_INCIDENT_PK,
+      incident_date_col = INCIDENT_DATE,
+      patient_DOB_col = PATIENT_DATE_OF_BIRTH_E_PATIENT_17,
+      epatient_15_col = PATIENT_AGE_E_PATIENT_15,
+      epatient_16_col = PATIENT_AGE_UNITS_E_PATIENT_16,
+      earrest_01_col = CARDIAC_ARREST_DURING_EMS_EVENT_WITH_CODE_E_ARREST_01,
+      eresponse_05_col = RESPONSE_TYPE_OF_SERVICE_REQUESTED_WITH_CODE_E_RESPONSE_05,
+      evitals_01_col = VITALS_SIGNS_TAKEN_DATE_TIME_E_VITALS_01,
+      evitals_12_col = VITALS_PULSE_OXIMETRY_E_VITALS_12,
+      eprocedures_01_col = PROCEDURE_PERFORMED_DATE_TIME_E_PROCEDURES_01,
+      eprocedures_02_col = PROCEDURE_PERFORMED_PRIOR_TO_EMS_CARE_E_PROCEDURES_02,
+      eprocedures_03_col = PROCEDURE_PERFORMED_DESCRIPTION_AND_CODE_E_PROCEDURES_03,
+      confidence_interval = TRUE,
+      method = "w",
+      conf.level = 0.95,
+      correct = TRUE,
+      .by = c(INCIDENT_YEAR, `Region: Preparedness`)
+    )
+  },
+  .args = list(
+    ps = patient_scene_table_s,
+    rsp = response_table_s,
+    arr = arrest_table_s,
+    pro = procedures_table_s,
+    vit = vitals_table_s
+  )
+)[.progress] |>
+  dplyr::bind_rows() |>
   dplyr::mutate(
     `Region: Preparedness` = dplyr::if_else(
       is.na(`Region: Preparedness`),
@@ -330,6 +378,9 @@ airway_05_result_regions_years <- nemsqar::airway_05(
       upper_ci = NA_real_
     )
   )
+
+# total time
+time_result_regions_year <- tictoc::toc()
 
 # regions
 airway_05_result_regions <- nemsqar::airway_05(

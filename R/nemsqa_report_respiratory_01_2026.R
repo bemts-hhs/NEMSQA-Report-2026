@@ -139,7 +139,8 @@ vitals_table_s <- mori::share(vitals_table)
 
 ### respiratory-01 populations #################################################
 
-# over all years 2021-2025
+# populations over all years 2021-2025 -----------------------------------
+
 respiratory_01_pop <- nemsqar::respiratory_01_population(
   df = NULL,
   patient_scene_table = patient_scene_table,
@@ -167,7 +168,12 @@ respiratory_01_missings <- respiratory_01_pop$missingness
 # set up daemons
 mirai::daemons(n = 13)
 
-# get respiratory_01 population data for each year using mirai and mori
+# track progress
+tictoc::tic(msg = "respiratory_01_pop_years_init")
+
+
+# get respiratory_01 population data for each year using mirai and mori ----
+
 respiratory_01_pop_years_init <- mirai::mirai_map(
   report_years,
   \(yr, ps, rsp, sit, vit) {
@@ -198,6 +204,9 @@ respiratory_01_pop_years_init <- mirai::mirai_map(
   )
 )[.progress]
 
+# Get total time
+time <- tictoc::toc()
+
 # append years to the population files
 respiratory_01_pop_years <- add_year_to_nested(
   x = respiratory_01_pop_years_init,
@@ -212,10 +221,6 @@ respiratory_01_missingness_years <- add_year_to_nested(
   years = 2021:2025
 )
 
-# remove the intermediary object
-rm(respiratory_01_pop_years_init)
-gc()
-
 # plot population trends over time
 respiratory_01_pop_years |>
   plot_nemsqa_pops(
@@ -226,8 +231,10 @@ respiratory_01_pop_years |>
 
 ### respiratory-01 results #####################################################
 
+# results years ----------------------------------------------------------
+
 # benchmark time - start
-start_result_year <- Sys.time()
+tictoc::tic(msg = "respiratory_01_result_year")
 
 # year
 respiratory_01_result_year <- mirai::mirai_map(
@@ -269,42 +276,59 @@ respiratory_01_result_year <- mirai::mirai_map(
     sit = situation_table_s,
     vit = vitals_table_s
   )
-)[.progress] |> 
+)[.progress] |>
   dplyr::bind_rows()
 
-# benchmark time - end
-end_result_year <- Sys.time()
-
 # benchmark time diff
-time_result_year <- difftime(
-  time1 = end_result_year,
-  time2 = start_result_year,
-  units = "auto"
-)
+time_result_year <- tictoc::toc()
+
+# results regions and years ----------------------------------------------
+
+# benchmark time - start
+tictoc::tic(msg = "respiratory_01_result_regions_years")
 
 # regions and years
-respiratory_01_result_regions_years <- nemsqar::respiratory_01(
-  df = NULL,
-  patient_scene_table = patient_scene_table,
-  response_table = response_table,
-  situation_table = situation_table,
-  vitals_table = vitals_table,
-  erecord_01_col = FACT_INCIDENT_PK,
-  incident_date_col = INCIDENT_DATE,
-  patient_DOB_col = PATIENT_DATE_OF_BIRTH_E_PATIENT_17,
-  epatient_15_col = PATIENT_AGE_E_PATIENT_15,
-  epatient_16_col = PATIENT_AGE_UNITS_E_PATIENT_16,
-  eresponse_05_col = RESPONSE_TYPE_OF_SERVICE_REQUESTED_WITH_CODE_E_RESPONSE_05,
-  esituation_11_col = SITUATION_PROVIDER_PRIMARY_IMPRESSION_CODE_AND_DESCRIPTION_E_SITUATION_11,
-  esituation_12_col = SITUATION_PROVIDER_SECONDARY_IMPRESSION_DESCRIPTION_AND_CODE_E_SITUATION_12,
-  evitals_12_col = VITALS_PULSE_OXIMETRY_E_VITALS_12,
-  evitals_14_col = VITALS_RESPIRATORY_RATE_E_VITALS_14,
-  confidence_interval = TRUE,
-  method = "w",
-  conf.level = 0.95,
-  correct = TRUE,
-  .by = c(INCIDENT_YEAR, `Region: Preparedness`)
-) |>
+respiratory_01_result_regions_years <- mirai::mirai_map(
+  report_years,
+  \(yr, ps, rsp, sit, vit) {
+    # parallelize over the years
+    ps_y <- ps |> dplyr::filter(INCIDENT_YEAR == yr)
+    rsp_y <- rsp |> dplyr::filter(INCIDENT_YEAR == yr)
+    sit_y <- sit |> dplyr::filter(INCIDENT_YEAR == yr)
+    vit_y <- vit |> dplyr::filter(INCIDENT_YEAR == yr)
+
+    # run the function in parallel
+    nemsqar::respiratory_01(
+      df = NULL,
+      patient_scene_table = ps_y,
+      response_table = rsp_y,
+      situation_table = sit_y,
+      vitals_table = vit_y,
+      erecord_01_col = FACT_INCIDENT_PK,
+      incident_date_col = INCIDENT_DATE,
+      patient_DOB_col = PATIENT_DATE_OF_BIRTH_E_PATIENT_17,
+      epatient_15_col = PATIENT_AGE_E_PATIENT_15,
+      epatient_16_col = PATIENT_AGE_UNITS_E_PATIENT_16,
+      eresponse_05_col = RESPONSE_TYPE_OF_SERVICE_REQUESTED_WITH_CODE_E_RESPONSE_05,
+      esituation_11_col = SITUATION_PROVIDER_PRIMARY_IMPRESSION_CODE_AND_DESCRIPTION_E_SITUATION_11,
+      esituation_12_col = SITUATION_PROVIDER_SECONDARY_IMPRESSION_DESCRIPTION_AND_CODE_E_SITUATION_12,
+      evitals_12_col = VITALS_PULSE_OXIMETRY_E_VITALS_12,
+      evitals_14_col = VITALS_RESPIRATORY_RATE_E_VITALS_14,
+      confidence_interval = TRUE,
+      method = "w",
+      conf.level = 0.95,
+      correct = TRUE,
+      .by = c(INCIDENT_YEAR, `Region: Preparedness`)
+    )
+  },
+  .args = list(
+    ps = patient_scene_table_s,
+    rsp = response_table_s,
+    sit = situation_table_s,
+    vit = vitals_table_s
+  )
+)[.progress] |>
+  dplyr::bind_rows() |>
   dplyr::mutate(
     `Region: Preparedness` = dplyr::if_else(
       is.na(`Region: Preparedness`),
@@ -327,29 +351,53 @@ respiratory_01_result_regions_years <- nemsqar::respiratory_01(
     )
   )
 
+# benchmark time diff
+time_result_regions_year <- tictoc::toc()
+
+# results regions --------------------------------------------------------
+
+# get start time
+tictoc::tic(msg = "respiratory_01_result_regions")
+
 # regions
-respiratory_01_result_regions <- nemsqar::respiratory_01(
-  df = NULL,
-  patient_scene_table = patient_scene_table,
-  response_table = response_table,
-  situation_table = situation_table,
-  vitals_table = vitals_table,
-  erecord_01_col = FACT_INCIDENT_PK,
-  incident_date_col = INCIDENT_DATE,
-  patient_DOB_col = PATIENT_DATE_OF_BIRTH_E_PATIENT_17,
-  epatient_15_col = PATIENT_AGE_E_PATIENT_15,
-  epatient_16_col = PATIENT_AGE_UNITS_E_PATIENT_16,
-  eresponse_05_col = RESPONSE_TYPE_OF_SERVICE_REQUESTED_WITH_CODE_E_RESPONSE_05,
-  esituation_11_col = SITUATION_PROVIDER_PRIMARY_IMPRESSION_CODE_AND_DESCRIPTION_E_SITUATION_11,
-  esituation_12_col = SITUATION_PROVIDER_SECONDARY_IMPRESSION_DESCRIPTION_AND_CODE_LIST_E_SITUATION_12,
-  evitals_12_col = VITALS_PULSE_OXIMETRY_E_VITALS_12,
-  evitals_14_col = VITALS_RESPIRATORY_RATE_E_VITALS_14,
-  confidence_interval = TRUE,
-  method = "w",
-  conf.level = 0.95,
-  correct = TRUE,
-  .by = `Region: Preparedness`
-) |>
+respiratory_01_result_regions <- mirai::mirai_map(
+  report_regions,
+  \(reg, ps, rsp, sit, vit) {
+    # get tables
+    ps_r <- ps |> dplyr::filter(`Region: Preparedness` == reg)
+
+    # run function in parallel
+    nemsqar::respiratory_01(
+      df = NULL,
+      patient_scene_table = ps_r,
+      response_table = rsp,
+      situation_table = sit,
+      vitals_table = vit,
+      erecord_01_col = FACT_INCIDENT_PK,
+      incident_date_col = INCIDENT_DATE,
+      patient_DOB_col = PATIENT_DATE_OF_BIRTH_E_PATIENT_17,
+      epatient_15_col = PATIENT_AGE_E_PATIENT_15,
+      epatient_16_col = PATIENT_AGE_UNITS_E_PATIENT_16,
+      eresponse_05_col = RESPONSE_TYPE_OF_SERVICE_REQUESTED_WITH_CODE_E_RESPONSE_05,
+      esituation_11_col = SITUATION_PROVIDER_PRIMARY_IMPRESSION_CODE_AND_DESCRIPTION_E_SITUATION_11,
+      esituation_12_col = SITUATION_PROVIDER_SECONDARY_IMPRESSION_DESCRIPTION_AND_CODE_LIST_E_SITUATION_12,
+      evitals_12_col = VITALS_PULSE_OXIMETRY_E_VITALS_12,
+      evitals_14_col = VITALS_RESPIRATORY_RATE_E_VITALS_14,
+      confidence_interval = TRUE,
+      method = "w",
+      conf.level = 0.95,
+      correct = TRUE,
+      .by = `Region: Preparedness`
+    )
+  },
+  .args = list(
+    ps = patient_scene_table_s,
+    rsp = response_table_s,
+    sit = situation_table_s,
+    vit = vitals_table_s
+  )
+)[.progress] |>
+  dplyr::bind_rows() |>
   dplyr::mutate(
     `Region: Preparedness` = dplyr::if_else(
       is.na(`Region: Preparedness`),
@@ -371,15 +419,15 @@ respiratory_01_result_regions <- nemsqar::respiratory_01(
     )
   )
 
+# get total time
+time_result_regions <- tictoc::toc()
+
+# results counties -------------------------------------------------------
+
 # counties
 respiratory_01_result_counties <- nemsqar::respiratory_01(
   df = NULL,
-  patient_scene_table = patient_scene_table |>
-    dplyr::mutate(
-      SCENE_INCIDENT_COUNTY_NAME_E_SCENE_21 = factor(
-        SCENE_INCIDENT_COUNTY_NAME_E_SCENE_21
-      )
-    ),
+  patient_scene_table = patient_scene_table,
   response_table = response_table,
   situation_table = situation_table,
   vitals_table = vitals_table,
@@ -413,6 +461,74 @@ respiratory_01_result_counties <- nemsqar::respiratory_01(
     )
   )
 
+
+# results counties and years ---------------------------------------------
+
+# get start time
+tictoc::tic(msg = "respiratory_01_result_counties_years")
+
+# counties and years
+respiratory_01_result_counties_years <- mirai::mirai_map(
+  report_years,
+  \(yr, ps, rsp, sit, vit) {
+    # parallelize over the years
+    ps_y <- ps |> dplyr::filter(INCIDENT_YEAR == yr)
+    rsp_y <- rsp |> dplyr::filter(INCIDENT_YEAR == yr)
+    sit_y <- sit |> dplyr::filter(INCIDENT_YEAR == yr)
+    vit_y <- vit |> dplyr::filter(INCIDENT_YEAR == yr)
+
+    # run the function in parallel
+    nemsqar::respiratory_01(
+      df = NULL,
+      patient_scene_table = ps_y,
+      response_table = rsp_y,
+      situation_table = sit_y,
+      vitals_table = vit_y,
+      erecord_01_col = FACT_INCIDENT_PK,
+      incident_date_col = INCIDENT_DATE,
+      patient_DOB_col = PATIENT_DATE_OF_BIRTH_E_PATIENT_17,
+      epatient_15_col = PATIENT_AGE_E_PATIENT_15,
+      epatient_16_col = PATIENT_AGE_UNITS_E_PATIENT_16,
+      eresponse_05_col = RESPONSE_TYPE_OF_SERVICE_REQUESTED_WITH_CODE_E_RESPONSE_05,
+      esituation_11_col = SITUATION_PROVIDER_PRIMARY_IMPRESSION_CODE_AND_DESCRIPTION_E_SITUATION_11,
+      esituation_12_col = SITUATION_PROVIDER_SECONDARY_IMPRESSION_DESCRIPTION_AND_CODE_LIST_E_SITUATION_12,
+      evitals_12_col = VITALS_PULSE_OXIMETRY_E_VITALS_12,
+      evitals_14_col = VITALS_RESPIRATORY_RATE_E_VITALS_14,
+      confidence_interval = TRUE,
+      method = "w",
+      conf.level = 0.95,
+      correct = TRUE,
+      .by = c(INCIDENT_YEAR, SCENE_INCIDENT_COUNTY_NAME_E_SCENE_21)
+    )
+  },
+  .args = list(
+    ps = patient_scene_table_s,
+    rsp = response_table_s,
+    sit = situation_table_s,
+    vit = vitals_table_s
+  )
+)[.progress] |>
+  dplyr::bind_rows() |>
+  tidyr::complete(
+    INCIDENT_YEAR,
+    SCENE_INCIDENT_COUNTY_NAME_E_SCENE_21,
+    measure,
+    pop,
+    fill = list(
+      numerator = 0,
+      denominator = 0,
+      prop = NA_real_,
+      prop_label = NA_character_,
+      lower_ci = NA_real_,
+      upper_ci = NA_real_
+    )
+  )
+
+# get total time
+time_result_counties_years <- tictoc::toc()
+
+# results overall --------------------------------------------------------
+
 # overall
 respiratory_01_result_overall <- nemsqar::respiratory_01(
   df = NULL,
@@ -436,29 +552,54 @@ respiratory_01_result_overall <- nemsqar::respiratory_01(
   correct = TRUE
 )
 
+
+# results services  ------------------------------------------------------
+
+# get start time
+tictoc::tic(msg = "respiratory_01_result_services")
+
 # services
-respiratory_01_result_services <- nemsqar::respiratory_01(
-  df = NULL,
-  patient_scene_table = patient_scene_table,
-  response_table = response_table,
-  situation_table = situation_table,
-  vitals_table = vitals_table,
-  erecord_01_col = FACT_INCIDENT_PK,
-  incident_date_col = INCIDENT_DATE,
-  patient_DOB_col = PATIENT_DATE_OF_BIRTH_E_PATIENT_17,
-  epatient_15_col = PATIENT_AGE_E_PATIENT_15,
-  epatient_16_col = PATIENT_AGE_UNITS_E_PATIENT_16,
-  eresponse_05_col = RESPONSE_TYPE_OF_SERVICE_REQUESTED_WITH_CODE_E_RESPONSE_05,
-  esituation_11_col = SITUATION_PROVIDER_PRIMARY_IMPRESSION_CODE_AND_DESCRIPTION_E_SITUATION_11,
-  esituation_12_col = SITUATION_PROVIDER_SECONDARY_IMPRESSION_DESCRIPTION_AND_CODE_E_SITUATION_12,
-  evitals_12_col = VITALS_PULSE_OXIMETRY_E_VITALS_12,
-  evitals_14_col = VITALS_RESPIRATORY_RATE_E_VITALS_14,
-  confidence_interval = TRUE,
-  method = "w",
-  conf.level = 0.95,
-  correct = TRUE,
-  .by = c(INCIDENT_YEAR, AGENCY_NAME_D_AGENCY_03)
-) |>
+respiratory_01_result_services <- mirai::mirai_map(
+  report_years,
+  \(yr, ps, rsp, sit, vit) {
+    # parallelize over the years
+    ps_y <- ps |> dplyr::filter(INCIDENT_YEAR == yr)
+    rsp_y <- rsp |> dplyr::filter(INCIDENT_YEAR == yr)
+    sit_y <- sit |> dplyr::filter(INCIDENT_YEAR == yr)
+    vit_y <- vit |> dplyr::filter(INCIDENT_YEAR == yr)
+
+    # run the function in parallel
+    nemsqar::respiratory_01(
+      df = NULL,
+      patient_scene_table = ps_y,
+      response_table = rsp_y,
+      situation_table = sit_y,
+      vitals_table = vit_y,
+      erecord_01_col = FACT_INCIDENT_PK,
+      incident_date_col = INCIDENT_DATE,
+      patient_DOB_col = PATIENT_DATE_OF_BIRTH_E_PATIENT_17,
+      epatient_15_col = PATIENT_AGE_E_PATIENT_15,
+      epatient_16_col = PATIENT_AGE_UNITS_E_PATIENT_16,
+      eresponse_05_col = RESPONSE_TYPE_OF_SERVICE_REQUESTED_WITH_CODE_E_RESPONSE_05,
+      esituation_11_col = SITUATION_PROVIDER_PRIMARY_IMPRESSION_CODE_AND_DESCRIPTION_E_SITUATION_11,
+      esituation_12_col = SITUATION_PROVIDER_SECONDARY_IMPRESSION_DESCRIPTION_AND_CODE_E_SITUATION_12,
+      evitals_12_col = VITALS_PULSE_OXIMETRY_E_VITALS_12,
+      evitals_14_col = VITALS_RESPIRATORY_RATE_E_VITALS_14,
+      confidence_interval = TRUE,
+      method = "w",
+      conf.level = 0.95,
+      correct = TRUE,
+      .by = c(INCIDENT_YEAR, AGENCY_NAME_D_AGENCY_03)
+    )
+  },
+  .args = list(
+    ps = patient_scene_table_s,
+    rsp = response_table_s,
+    sit = situation_table_s,
+    vit = vitals_table_s
+  )
+)[.progress] |>
+  dplyr::bind_rows() |>
   tidyr::complete(
     INCIDENT_YEAR,
     AGENCY_NAME_D_AGENCY_03,
@@ -473,6 +614,9 @@ respiratory_01_result_services <- nemsqar::respiratory_01(
       upper_ci = NA_real_
     )
   )
+
+# get total time
+time_result_services <- tictoc::toc()
 
 ### EXPORT =====================================================================
 

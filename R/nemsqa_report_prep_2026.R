@@ -39,7 +39,8 @@ report_regions <- c("1A", "1C", as.character(c(2:7)))
 #   "flextable",
 #   "mirai",
 #   "mori",
-#   "ggthemes"
+#   "ggthemes",
+#   "tictoc"
 # ))
 
 # showtext setup ----

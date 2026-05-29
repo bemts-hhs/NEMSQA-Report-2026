@@ -146,7 +146,8 @@ vitals_table_s <- mori::share(vitals_table)
 
 ### airway-01 populations ######################################################
 
-# over all years 2021-2025
+# populations over all years 2021-2025 -----------------------------------
+
 airway_01_pop <- nemsqar::airway_01_population(
   df = NULL,
   patient_scene_table = patient_scene_table,
@@ -181,9 +182,11 @@ airway_01_missings <- airway_01_pop$missingness
 mirai::daemons(n = 13)
 
 # track progress
-start <- Sys.time()
+tictoc::tic("airway_01_pop_years")
 
-# get airway_01 population data for each year using mirai and mori
+
+# get airway_01 population data for each year using mirai and mori -------
+
 airway_01_pop_years_init <- mirai::mirai_map(
   report_years,
   \(yr, ps, rsp, arr, pro, vit) {
@@ -221,11 +224,8 @@ airway_01_pop_years_init <- mirai::mirai_map(
   )
 )[.progress]
 
-# Get end time
-end <- Sys.time()
-
 # Get total time
-time <- difftime(time1 = end, time2 = start, units = "auto")
+time <- tictoc::toc()
 
 # append years to the population files
 airway_01_pop_years <- add_year_to_nested(
@@ -241,10 +241,6 @@ airway_01_missingness_years <- add_year_to_nested(
   years = 2021:2025
 )
 
-# remove the intermediary object
-rm(airway_01_pop_years_init)
-gc()
-
 # plot population trends over time
 airway_01_pop_years |>
   plot_nemsqa_pops(
@@ -258,7 +254,7 @@ airway_01_pop_years |>
 # results years ----------------------------------------------------------
 
 # get start time
-start_result_year <- Sys.time()
+tictoc::tic(msg = "airway_01_result_year")
 
 # year
 airway_01_result_year <- mirai::mirai_map(
@@ -304,16 +300,13 @@ airway_01_result_year <- mirai::mirai_map(
 )[.progress] |>
   dplyr::bind_rows()
 
-# get end time
-end_result_year <- Sys.time()
-
 # total time
-time_result_year <- difftime(end_result_year, start_result_year, units = "auto")
+time_result_year <- tictoc::toc()
 
 # results regions and years ----------------------------------------------
 
 # get start time
-start_result_regions_year <- Sys.time()
+tictoc::tic(msg = "airway_01_result_regions_years")
 
 # regions and years
 airway_01_result_regions_years <- mirai::mirai_map(
@@ -326,6 +319,7 @@ airway_01_result_regions_years <- mirai::mirai_map(
     pro_y <- pro |> dplyr::filter(INCIDENT_YEAR == yr)
     vit_y <- vit |> dplyr::filter(INCIDENT_YEAR == yr)
 
+    # run function in parallel
     nemsqar::airway_01(
       df = NULL,
       patient_scene_table = ps_y,
@@ -386,18 +380,13 @@ airway_01_result_regions_years <- mirai::mirai_map(
     )
   )
 
-# get end time
-end_result_regions_year <- Sys.time()
-
 # total time
-time_result_regions_year <- difftime(
-  end_result_regions_year,
-  start_result_regions_year,
-  units = "auto"
-)
+time_result_regions_year <- tictoc::toc()
+
+# results regions --------------------------------------------------------
 
 # get start time
-start_result_regions <- Sys.time()
+tictoc::tic(msg = "airway_01_result_regions")
 
 # regions
 airway_01_result_regions <- mirai::mirai_map(
@@ -466,16 +455,10 @@ airway_01_result_regions <- mirai::mirai_map(
     )
   )
 
-# get end time
-end_result_regions <- Sys.time()
-
 # total time
-time_result_regions <- difftime(
-  end_result_regions,
-  start_result_regions,
-  units = "auto"
-)
+time_result_regions <- tictoc::toc()
 
+# results counties -------------------------------------------------------
 # counties
 airway_01_result_counties <- nemsqar::airway_01(
   df = NULL,
@@ -519,24 +502,31 @@ airway_01_result_counties <- nemsqar::airway_01(
     )
   )
 
+
+# results counties years -------------------------------------------------
+
 # start time counties / years
-start_result_counties_years <- Sys.time()
+tictoc::tic(msg = "airway_01_result_counties_years")
 
 # counties
 airway_01_result_counties_years <- mirai::mirai_map(
   report_years,
   \(yr, ps, rsp, arr, pro, vit) {
-    # parallelize by year
+    # parallelize over years
     ps_y <- ps |> dplyr::filter(INCIDENT_YEAR == yr)
+    rsp_y <- rsp |> dplyr::filter(INCIDENT_YEAR == yr)
+    arr_y <- arr |> dplyr::filter(INCIDENT_YEAR == yr)
+    pro_y <- pro |> dplyr::filter(INCIDENT_YEAR == yr)
+    vit_y <- vit |> dplyr::filter(INCIDENT_YEAR == yr)
 
-    # run the function in parallel
+    # run the function
     nemsqar::airway_01(
       df = NULL,
       patient_scene_table = ps_y,
-      response_table = rsp,
-      arrest_table = arr,
-      procedures_table = pro,
-      vitals_table = vit,
+      response_table = rsp_y,
+      arrest_table = arr_y,
+      procedures_table = pro_y,
+      vitals_table = vit_y,
       erecord_01_col = FACT_INCIDENT_PK,
       incident_date_col = INCIDENT_DATE,
       patient_DOB_col = PATIENT_DATE_OF_BIRTH_E_PATIENT_17,
@@ -583,15 +573,10 @@ airway_01_result_counties_years <- mirai::mirai_map(
     )
   )
 
-# get end time
-end_result_counties_years <- Sys.time()
-
 # total time
-time_result_counties_years <- difftime(
-  end_result_counties_years,
-  start_result_counties_years,
-  units = "auto"
-)
+time_result_counties_years <- tictoc::toc()
+
+# results overall --------------------------------------------------------
 
 # overall
 airway_01_result_overall <- nemsqar::airway_01(
@@ -622,8 +607,10 @@ airway_01_result_overall <- nemsqar::airway_01(
   correct = TRUE
 )
 
+# results services -------------------------------------------------------
+
 # get start time
-start_result_services <- Sys.time()
+tictoc::tic(msg = "airway_01_result_services")
 
 # services
 airway_01_result_services <- mirai::mirai_map(
@@ -631,15 +618,19 @@ airway_01_result_services <- mirai::mirai_map(
   \(yr, ps, rsp, arr, pro, vit) {
     # parallelize over years
     ps_y <- ps |> dplyr::filter(INCIDENT_YEAR == yr)
+    rsp_y <- rsp |> dplyr::filter(INCIDENT_YEAR == yr)
+    arr_y <- arr |> dplyr::filter(INCIDENT_YEAR == yr)
+    pro_y <- pro |> dplyr::filter(INCIDENT_YEAR == yr)
+    vit_y <- vit |> dplyr::filter(INCIDENT_YEAR == yr)
 
     # run the function
     nemsqar::airway_01(
       df = NULL,
       patient_scene_table = ps_y,
-      response_table = rsp,
-      arrest_table = arr,
-      procedures_table = pro,
-      vitals_table = vit,
+      response_table = rsp_y,
+      arrest_table = arr_y,
+      procedures_table = pro_y,
+      vitals_table = vit_y,
       erecord_01_col = FACT_INCIDENT_PK,
       incident_date_col = INCIDENT_DATE,
       patient_DOB_col = PATIENT_DATE_OF_BIRTH_E_PATIENT_17,
@@ -686,15 +677,8 @@ airway_01_result_services <- mirai::mirai_map(
     )
   )
 
-# get end time
-end_result_services <- Sys.time()
-
 # total time
-time_result_services <- difftime(
-  end_result_services,
-  start_result_services,
-  units = "auto"
-)
+time_result_services <- tictoc::toc()
 
 # unburden daemons
 mirai::daemons(n = 0)
