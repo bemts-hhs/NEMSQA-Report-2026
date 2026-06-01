@@ -171,7 +171,6 @@ mirai::daemons(n = 13)
 # track progress
 tictoc::tic(msg = "respiratory_01_pop_years_init")
 
-
 # get respiratory_01 population data for each year using mirai and mori ----
 
 respiratory_01_pop_years_init <- mirai::mirai_map(
@@ -618,7 +617,8 @@ respiratory_01_result_services <- mirai::mirai_map(
 # get total time
 time_result_services <- tictoc::toc()
 
-### EXPORT =====================================================================
+
+# EXPORT -----------------------------------------------------------------
 
 ### population exports #########################################################
 
