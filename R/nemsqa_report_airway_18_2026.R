@@ -183,6 +183,9 @@ airway_18_pop_filter_process <- airway_18_pop$filter_process
 ### missingness results for 2021-2025 ----
 airway_18_missings <- airway_18_pop$missingness
 
+# set up daemons
+mirai::daemons(n = 13)
+
 ## get airway_18_population data for each year -------
 
 ### 2021 ----

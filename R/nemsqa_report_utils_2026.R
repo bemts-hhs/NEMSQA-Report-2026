@@ -1997,7 +1997,7 @@ export_nemsqa_data <- function(
   skipped_count <- 0
 
   # Report header
-  cli::cli_h1("NEMSQA Exports for {measure} {folder}s")
+  cli::cli_h1("NEMSQA Exports for {measure} {folder}")
   cli::cli_text("\n") # Add space for readability
 
   # Iterate through matched objects
@@ -2016,7 +2016,7 @@ export_nemsqa_data <- function(
   }
 
   # Final summary report
-  cli::cli_h2("{measure} {folder}s Export Summary")
+  cli::cli_h2("{measure} {folder} Export Summary")
   cli::cli_alert_success("Total objects matched: {length(objects)}")
   cli::cli_alert_success("Total successfully exported: {exported_count}")
   cli::cli_alert_warning("Total skipped (not data frames): {skipped_count}")

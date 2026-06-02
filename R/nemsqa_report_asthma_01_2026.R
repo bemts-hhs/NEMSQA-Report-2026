@@ -1,19 +1,25 @@
-### IOWA NEMSQA REPORT ASTHMA-01 2025 ------------------------------------------
+# IOWA NEMSQA REPORT ASTHMA-01 2026 ------------------------------------------
 
 ###_____________________________________________________________________________
 # this script will contain all reporting calculations for Asthma-01
-# use nemsqa_report_prep_2025.R to get critical functions into memory
+# use nemsqa_report_prep_2026.R to get critical functions into memory
 ###_____________________________________________________________________________
-# assume that nemsqa_report_prep_2025.R was already ran to load needed packages
+# assume that nemsqa_report_prep_2026.R was already ran to load needed packages
 # and project-specific custom functions in the project
 ###_____________________________________________________________________________
+# For any section that includes parallel processing, the intent is to run the
+# tictoc chunks together with the nemsqar / mirai parallel processing chunks so
+# that function time benchmarking can happen. This is not required, but will
+# help check how parallel processing is performing, and if parallel processing
+# should be used at all for certain NEMSQA measure analyses.
+###___________________________________________________________________________
 
-### DATA -----------------------------------------------------------------------
+# DATA -----------------------------------------------------------------------
 
 # tables imported in alphabetical order
 # tables do not need to be loaded again if already in memory
 
-# medications tables -----------------------------------------------------
+## medications tables -----------------------------------------------------
 medications_table <- load_nemsqa_parallel(
   table = "medications",
   year = 2021:2025,
@@ -23,7 +29,7 @@ medications_table <- load_nemsqa_parallel(
 # share the medications table
 medications_table_s <- mori::share(medications_table)
 
-# patient tables ---------------------------------------------------------
+## patient tables ---------------------------------------------------------
 # Utilize mirai for asynchronous loading
 # automatically bind rows
 patient_scene_clean <- load_nemsqa_parallel(
@@ -32,7 +38,7 @@ patient_scene_clean <- load_nemsqa_parallel(
   cores = 13
 )
 
-# final manipulations on the patient/scene table
+### final manipulations on the patient/scene table ----
 # handle multiple issues with location using external data sources with
 # consistent names
 
@@ -108,7 +114,7 @@ patient_scene_table <- patient_scene_clean |>
 # share the patient_scene_table
 patient_scene_table_s <- mori::share(patient_scene_table)
 
-# response tables --------------------------------------------------------
+## response tables --------------------------------------------------------
 response_table <- load_nemsqa_parallel(
   table = "response",
   years = 2021:2025,
@@ -118,7 +124,7 @@ response_table <- load_nemsqa_parallel(
 # share the response table
 response_table_s <- mori::share(response_table)
 
-# situation tables -------------------------------------------------------
+## situation tables -------------------------------------------------------
 # set up situation table for manipulations
 situation_table <- load_nemsqa_parallel(
   table = "situation",
@@ -129,13 +135,13 @@ situation_table <- load_nemsqa_parallel(
 # Share the situation_table
 situation_table_s <- mori::share(situation_table)
 
-### CALCULATIONS ---------------------------------------------------------------
+# CALCULATIONS ---------------------------------------------------------------
 
-### Asthma-01 ==================================================================
+## Asthma-01 ==================================================================
 
-### asthma-01 populations ########################################################
+# asthma-01 populations ########################################################
 
-# population over all years 2021-2025 ------------------------------------
+## population over all years 2021-2025 ------------------------------------
 
 asthma_01_pop <- nemsqar::asthma_01_population(
   df = NULL,
@@ -154,14 +160,16 @@ asthma_01_pop <- nemsqar::asthma_01_population(
   emedications_03_col = MEDICATION_GIVEN_OR_ADMINISTERED_DESCRIPTION_AND_RXCUI_CODE_E_MEDICATIONS_03
 )
 
-# population results for 2021-2024
+### population results for 2021-2025 ----
 asthma_01_pop_filter_process <- asthma_01_pop$filter_process
 
-# population missingness results for 2021-2025
+### population missingness results for 2021-2025 ----
 asthma_01_missings <- asthma_01_pop$missingness
 
+# set up daemons
+mirai::daemons(n = 13)
 
-# populations over all years 2021-2025 -----------------------------------
+## get asthma_01 population data for each year using mirai and mori --------
 
 # track progress
 tictoc::tic(msg = "asthma_01_pop_years_init")
@@ -204,21 +212,21 @@ asthma_01_pop_years_init <- mirai::mirai_map(
 # Get total time
 time <- tictoc::toc()
 
-# append years to the population files
+### append years to the population files ----
 asthma_01_pop_years <- add_year_to_nested(
   x = asthma_01_pop_years_init,
   file = "filter_process",
   years = 2021:2025
 )
 
-# append years to the missingness files
+### append years to the missingness files ----
 asthma_01_missingness_years <- add_year_to_nested(
   x = asthma_01_pop_years_init,
   file = "missingness",
   years = 2021:2025
 )
 
-# plot population trends over time
+### plot population trends over time ----
 asthma_01_pop_years |>
   plot_nemsqa_pops(
     type = "col",
@@ -226,53 +234,104 @@ asthma_01_pop_years |>
     plot_title = "Asthma-01"
   )
 
-### asthma-01 results ##########################################################
+# asthma-01 results ##########################################################
 
-# year
-asthma_01_result_year <- nemsqar::asthma_01(
-  df = NULL,
-  patient_scene_table = patient_scene_table,
-  response_table = response_table,
-  situation_table = situation_table,
-  medications_table = medications_table,
-  erecord_01_col = FACT_INCIDENT_PK,
-  incident_date_col = INCIDENT_DATE,
-  patient_DOB_col = PATIENT_DATE_OF_BIRTH_E_PATIENT_17,
-  epatient_15_col = PATIENT_AGE_E_PATIENT_15,
-  epatient_16_col = PATIENT_AGE_UNITS_E_PATIENT_16,
-  eresponse_05_col = RESPONSE_TYPE_OF_SERVICE_REQUESTED_WITH_CODE_E_RESPONSE_05,
-  esituation_11_col = SITUATION_PROVIDER_PRIMARY_IMPRESSION_CODE_AND_DESCRIPTION_E_SITUATION_11,
-  esituation_12_col = SITUATION_PROVIDER_SECONDARY_IMPRESSION_DESCRIPTION_AND_CODE_E_SITUATION_12,
-  emedications_03_col = MEDICATION_GIVEN_OR_ADMINISTERED_DESCRIPTION_AND_RXCUI_CODE_E_MEDICATIONS_03,
-  confidence_interval = TRUE,
-  method = "w",
-  conf.level = 0.95,
-  correct = TRUE,
-  .by = INCIDENT_YEAR
-)
+## results years ----------------------------------------------------------
 
-# regions and years
-asthma_01_result_regions_years <- nemsqar::asthma_01(
-  df = NULL,
-  patient_scene_table = patient_scene_table,
-  response_table = response_table,
-  situation_table = situation_table,
-  medications_table = medications_table,
-  erecord_01_col = FACT_INCIDENT_PK,
-  incident_date_col = INCIDENT_DATE,
-  patient_DOB_col = PATIENT_DATE_OF_BIRTH_E_PATIENT_17,
-  epatient_15_col = PATIENT_AGE_E_PATIENT_15,
-  epatient_16_col = PATIENT_AGE_UNITS_E_PATIENT_16,
-  eresponse_05_col = RESPONSE_TYPE_OF_SERVICE_REQUESTED_WITH_CODE_E_RESPONSE_05,
-  esituation_11_col = SITUATION_PROVIDER_PRIMARY_IMPRESSION_CODE_AND_DESCRIPTION_E_SITUATION_11,
-  esituation_12_col = SITUATION_PROVIDER_SECONDARY_IMPRESSION_DESCRIPTION_AND_CODE_E_SITUATION_12,
-  emedications_03_col = MEDICATION_GIVEN_OR_ADMINISTERED_DESCRIPTION_AND_RXCUI_CODE_E_MEDICATIONS_03,
-  confidence_interval = TRUE,
-  method = "w",
-  conf.level = 0.95,
-  correct = TRUE,
-  .by = c(INCIDENT_YEAR, `Region: Preparedness`)
-) |>
+# get start time
+tictoc::tic(msg = "asthma_01_result_year")
+
+### year ----
+asthma_01_result_year <- mirai::mirai_map(
+  report_years,
+  \(yr, ps, rsp, sit, med) {
+    # parallelize by year
+    ps_y <- ps |> dplyr::filter(INCIDENT_YEAR == yr)
+    rsp_y <- rsp |> dplyr::filter(INCIDENT_YEAR == yr)
+    sit_y <- sit |> dplyr::filter(INCIDENT_YEAR == yr)
+    med_y <- med |> dplyr::filter(INCIDENT_YEAR == yr)
+
+    # run function in parallel
+    nemsqar::asthma_01(
+      df = NULL,
+      patient_scene_table = ps_y,
+      response_table = rsp_y,
+      situation_table = sit_y,
+      medications_table = med_y,
+      erecord_01_col = FACT_INCIDENT_PK,
+      incident_date_col = INCIDENT_DATE,
+      patient_DOB_col = PATIENT_DATE_OF_BIRTH_E_PATIENT_17,
+      epatient_15_col = PATIENT_AGE_E_PATIENT_15,
+      epatient_16_col = PATIENT_AGE_UNITS_E_PATIENT_16,
+      eresponse_05_col = RESPONSE_TYPE_OF_SERVICE_REQUESTED_WITH_CODE_E_RESPONSE_05,
+      esituation_11_col = SITUATION_PROVIDER_PRIMARY_IMPRESSION_CODE_AND_DESCRIPTION_E_SITUATION_11,
+      esituation_12_col = SITUATION_PROVIDER_SECONDARY_IMPRESSION_DESCRIPTION_AND_CODE_E_SITUATION_12,
+      emedications_03_col = MEDICATION_GIVEN_OR_ADMINISTERED_DESCRIPTION_AND_RXCUI_CODE_E_MEDICATIONS_03,
+      confidence_interval = TRUE,
+      method = "w",
+      conf.level = 0.95,
+      correct = TRUE,
+      .by = INCIDENT_YEAR
+    )
+  },
+  .args = list(
+    ps = patient_scene_table_s,
+    rsp = response_table_s,
+    sit = situation_table_s,
+    med = medications_table_s
+  )
+)[.progress] |>
+  dplyr::bind_rows()
+
+# total time
+time_result_year <- tictoc::toc()
+
+## results regions and years ----------------------------------------------
+
+# get start time
+tictoc::tic(msg = "asthma_01_result_regions_year")
+
+### regions and years ----
+asthma_01_result_regions_years <- mirai::mirai_map(
+  report_years,
+  \(yr, ps, rsp, sit, med) {
+    # parallelize by year
+    ps_y <- ps |> dplyr::filter(INCIDENT_YEAR == yr)
+    rsp_y <- rsp |> dplyr::filter(INCIDENT_YEAR == yr)
+    sit_y <- sit |> dplyr::filter(INCIDENT_YEAR == yr)
+    med_y <- med |> dplyr::filter(INCIDENT_YEAR == yr)
+
+    # run function in parallel
+    nemsqar::asthma_01(
+      df = NULL,
+      patient_scene_table = ps_y,
+      response_table = rsp_y,
+      situation_table = sit_y,
+      medications_table = med_y,
+      erecord_01_col = FACT_INCIDENT_PK,
+      incident_date_col = INCIDENT_DATE,
+      patient_DOB_col = PATIENT_DATE_OF_BIRTH_E_PATIENT_17,
+      epatient_15_col = PATIENT_AGE_E_PATIENT_15,
+      epatient_16_col = PATIENT_AGE_UNITS_E_PATIENT_16,
+      eresponse_05_col = RESPONSE_TYPE_OF_SERVICE_REQUESTED_WITH_CODE_E_RESPONSE_05,
+      esituation_11_col = SITUATION_PROVIDER_PRIMARY_IMPRESSION_CODE_AND_DESCRIPTION_E_SITUATION_11,
+      esituation_12_col = SITUATION_PROVIDER_SECONDARY_IMPRESSION_DESCRIPTION_AND_CODE_E_SITUATION_12,
+      emedications_03_col = MEDICATION_GIVEN_OR_ADMINISTERED_DESCRIPTION_AND_RXCUI_CODE_E_MEDICATIONS_03,
+      confidence_interval = TRUE,
+      method = "w",
+      conf.level = 0.95,
+      correct = TRUE,
+      .by = c(INCIDENT_YEAR, `Region: Preparedness`)
+    )
+  },
+  .args = list(
+    ps = patient_scene_table_s,
+    rsp = response_table_s,
+    sit = situation_table_s,
+    med = medications_table_s
+  )
+)[.progress] |>
+  dplyr::bind_rows() |>
   dplyr::mutate(
     `Region: Preparedness` = dplyr::if_else(
       is.na(`Region: Preparedness`),
@@ -295,28 +354,53 @@ asthma_01_result_regions_years <- nemsqar::asthma_01(
     )
   )
 
-# regions
-asthma_01_result_regions <- nemsqar::asthma_01(
-  df = NULL,
-  patient_scene_table = patient_scene_table,
-  response_table = response_table,
-  situation_table = situation_table,
-  medications_table = medications_table,
-  erecord_01_col = FACT_INCIDENT_PK,
-  incident_date_col = INCIDENT_DATE,
-  patient_DOB_col = PATIENT_DATE_OF_BIRTH_E_PATIENT_17,
-  epatient_15_col = PATIENT_AGE_E_PATIENT_15,
-  epatient_16_col = PATIENT_AGE_UNITS_E_PATIENT_16,
-  eresponse_05_col = RESPONSE_TYPE_OF_SERVICE_REQUESTED_WITH_CODE_E_RESPONSE_05,
-  esituation_11_col = SITUATION_PROVIDER_PRIMARY_IMPRESSION_CODE_AND_DESCRIPTION_E_SITUATION_11,
-  esituation_12_col = SITUATION_PROVIDER_SECONDARY_IMPRESSION_DESCRIPTION_AND_CODE_E_SITUATION_12,
-  emedications_03_col = MEDICATION_GIVEN_OR_ADMINISTERED_DESCRIPTION_AND_RXCUI_CODE_E_MEDICATIONS_03,
-  confidence_interval = TRUE,
-  method = "w",
-  conf.level = 0.95,
-  correct = TRUE,
-  .by = `Region: Preparedness`
-) |>
+# total time
+time_result_regions_year <- tictoc::toc()
+
+## results regions --------------------------------------------------------
+
+# get start time
+tictoc::tic(msg = "asthma_01_result_regions")
+
+### regions ----
+asthma_01_result_regions <- mirai::mirai_map(
+  report_regions,
+  \(reg, ps, rsp, sit, med) {
+    # parallelize by district
+    # get tables
+    ps_r <- ps |> dplyr::filter(`Region: Preparedness` == reg)
+
+    # run function in parallel
+    nemsqar::asthma_01(
+      df = NULL,
+      patient_scene_table = ps_r,
+      response_table = rsp,
+      situation_table = sit,
+      medications_table = med,
+      erecord_01_col = FACT_INCIDENT_PK,
+      incident_date_col = INCIDENT_DATE,
+      patient_DOB_col = PATIENT_DATE_OF_BIRTH_E_PATIENT_17,
+      epatient_15_col = PATIENT_AGE_E_PATIENT_15,
+      epatient_16_col = PATIENT_AGE_UNITS_E_PATIENT_16,
+      eresponse_05_col = RESPONSE_TYPE_OF_SERVICE_REQUESTED_WITH_CODE_E_RESPONSE_05,
+      esituation_11_col = SITUATION_PROVIDER_PRIMARY_IMPRESSION_CODE_AND_DESCRIPTION_E_SITUATION_11,
+      esituation_12_col = SITUATION_PROVIDER_SECONDARY_IMPRESSION_DESCRIPTION_AND_CODE_E_SITUATION_12,
+      emedications_03_col = MEDICATION_GIVEN_OR_ADMINISTERED_DESCRIPTION_AND_RXCUI_CODE_E_MEDICATIONS_03,
+      confidence_interval = TRUE,
+      method = "w",
+      conf.level = 0.95,
+      correct = TRUE,
+      .by = `Region: Preparedness`
+    )
+  },
+  .args = list(
+    ps = patient_scene_table_s,
+    rsp = response_table_s,
+    sit = situation_table_s,
+    med = medications_table_s
+  )
+)[.progress] |>
+  dplyr::bind_rows() |>
   dplyr::mutate(
     `Region: Preparedness` = dplyr::if_else(
       is.na(`Region: Preparedness`),
@@ -338,15 +422,15 @@ asthma_01_result_regions <- nemsqar::asthma_01(
     )
   )
 
-# counties
+# total time
+time_result_regions <- tictoc::toc()
+
+## results counties -------------------------------------------------------
+
+### counties ----
 asthma_01_result_counties <- nemsqar::asthma_01(
   df = NULL,
-  patient_scene_table = patient_scene_table |>
-    dplyr::mutate(
-      SCENE_INCIDENT_COUNTY_NAME_E_SCENE_21 = factor(
-        SCENE_INCIDENT_COUNTY_NAME_E_SCENE_21
-      )
-    ),
+  patient_scene_table = patient_scene_table,
   response_table = response_table,
   situation_table = situation_table,
   medications_table = medications_table,
@@ -379,7 +463,73 @@ asthma_01_result_counties <- nemsqar::asthma_01(
     )
   )
 
-# overall
+## results counties years -------------------------------------------------
+
+# start time counties / years
+tictoc::tic(msg = "asthma_01_result_counties_years")
+
+### counties years ----
+asthma_01_result_counties_years <- mirai::mirai_map(
+  report_years,
+  \(yr, ps, rsp, sit, med) {
+    # parallelize by year
+    ps_y <- ps |> dplyr::filter(INCIDENT_YEAR == yr)
+    rsp_y <- rsp |> dplyr::filter(INCIDENT_YEAR == yr)
+    sit_y <- sit |> dplyr::filter(INCIDENT_YEAR == yr)
+    med_y <- med |> dplyr::filter(INCIDENT_YEAR == yr)
+
+    # run function in parallel
+    nemsqar::asthma_01(
+      df = NULL,
+      patient_scene_table = ps_y,
+      response_table = rsp_y,
+      situation_table = sit_y,
+      medications_table = med_y,
+      erecord_01_col = FACT_INCIDENT_PK,
+      incident_date_col = INCIDENT_DATE,
+      patient_DOB_col = PATIENT_DATE_OF_BIRTH_E_PATIENT_17,
+      epatient_15_col = PATIENT_AGE_E_PATIENT_15,
+      epatient_16_col = PATIENT_AGE_UNITS_E_PATIENT_16,
+      eresponse_05_col = RESPONSE_TYPE_OF_SERVICE_REQUESTED_WITH_CODE_E_RESPONSE_05,
+      esituation_11_col = SITUATION_PROVIDER_PRIMARY_IMPRESSION_CODE_AND_DESCRIPTION_E_SITUATION_11,
+      esituation_12_col = SITUATION_PROVIDER_SECONDARY_IMPRESSION_DESCRIPTION_AND_CODE_E_SITUATION_12,
+      emedications_03_col = MEDICATION_GIVEN_OR_ADMINISTERED_DESCRIPTION_AND_RXCUI_CODE_E_MEDICATIONS_03,
+      confidence_interval = TRUE,
+      method = "w",
+      conf.level = 0.95,
+      correct = TRUE,
+      .by = c(INCIDENT_YEAR, SCENE_INCIDENT_COUNTY_NAME_E_SCENE_21)
+    )
+  },
+  .args = list(
+    ps = patient_scene_table_s,
+    rsp = response_table_s,
+    sit = situation_table_s,
+    med = medications_table_s
+  )
+)[.progress] |>
+  dplyr::bind_rows() |>
+  tidyr::complete(
+    INCIDENT_YEAR,
+    SCENE_INCIDENT_COUNTY_NAME_E_SCENE_21,
+    measure,
+    pop,
+    fill = list(
+      numerator = 0,
+      denominator = 0,
+      prop = NA_real_,
+      prop_label = NA_character_,
+      lower_ci = NA_real_,
+      upper_ci = NA_real_
+    )
+  )
+
+# total time
+time_result_counties_years <- tictoc::toc()
+
+## results overall --------------------------------------------------------
+
+### overall ----
 asthma_01_result_overall <- nemsqar::asthma_01(
   df = NULL,
   patient_scene_table = patient_scene_table,
@@ -401,115 +551,53 @@ asthma_01_result_overall <- nemsqar::asthma_01(
   correct = TRUE
 )
 
-# regions
-asthma_01_result_regions <- nemsqar::asthma_01(
-  df = NULL,
-  patient_scene_table = patient_scene_table,
-  response_table = response_table,
-  situation_table = situation_table,
-  medications_table = medications_table,
-  erecord_01_col = FACT_INCIDENT_PK,
-  incident_date_col = INCIDENT_DATE,
-  patient_DOB_col = PATIENT_DATE_OF_BIRTH_E_PATIENT_17,
-  epatient_15_col = PATIENT_AGE_E_PATIENT_15,
-  epatient_16_col = PATIENT_AGE_UNITS_E_PATIENT_16,
-  eresponse_05_col = RESPONSE_TYPE_OF_SERVICE_REQUESTED_WITH_CODE_E_RESPONSE_05,
-  esituation_11_col = SITUATION_PROVIDER_PRIMARY_IMPRESSION_CODE_AND_DESCRIPTION_E_SITUATION_11,
-  esituation_12_col = SITUATION_PROVIDER_SECONDARY_IMPRESSION_DESCRIPTION_AND_CODE_E_SITUATION_12,
-  emedications_03_col = MEDICATION_GIVEN_OR_ADMINISTERED_DESCRIPTION_AND_RXCUI_CODE_E_MEDICATIONS_03,
-  confidence_interval = TRUE,
-  method = "w",
-  conf.level = 0.95,
-  correct = TRUE,
-  .by = `Region: Preparedness`
-) |>
-  dplyr::mutate(
-    `Region: Preparedness` = dplyr::if_else(
-      is.na(`Region: Preparedness`),
-      "Missing",
-      `Region: Preparedness`
-    )
-  ) |>
-  tidyr::complete(
-    `Region: Preparedness`,
-    measure,
-    pop,
-    fill = list(
-      numerator = 0,
-      denominator = 0,
-      prop = NA_real_,
-      prop_label = NA_character_,
-      lower_ci = NA_real_,
-      upper_ci = NA_real_
-    )
-  )
 
-# regions and years
-asthma_01_result_regions_years <- nemsqar::asthma_01(
-  df = NULL,
-  patient_scene_table = patient_scene_table,
-  response_table = response_table,
-  situation_table = situation_table,
-  medications_table = medications_table,
-  erecord_01_col = FACT_INCIDENT_PK,
-  incident_date_col = INCIDENT_DATE,
-  patient_DOB_col = PATIENT_DATE_OF_BIRTH_E_PATIENT_17,
-  epatient_15_col = PATIENT_AGE_E_PATIENT_15,
-  epatient_16_col = PATIENT_AGE_UNITS_E_PATIENT_16,
-  eresponse_05_col = RESPONSE_TYPE_OF_SERVICE_REQUESTED_WITH_CODE_E_RESPONSE_05,
-  esituation_11_col = SITUATION_PROVIDER_PRIMARY_IMPRESSION_CODE_AND_DESCRIPTION_E_SITUATION_11,
-  esituation_12_col = SITUATION_PROVIDER_SECONDARY_IMPRESSION_DESCRIPTION_AND_CODE_E_SITUATION_12,
-  emedications_03_col = MEDICATION_GIVEN_OR_ADMINISTERED_DESCRIPTION_AND_RXCUI_CODE_E_MEDICATIONS_03,
-  confidence_interval = TRUE,
-  method = "w",
-  conf.level = 0.95,
-  correct = TRUE,
-  .by = c(INCIDENT_YEAR, `Region: Preparedness`)
-) |>
-  dplyr::mutate(
-    `Region: Preparedness` = dplyr::if_else(
-      is.na(`Region: Preparedness`),
-      "Missing",
-      `Region: Preparedness`
-    )
-  ) |>
-  tidyr::complete(
-    INCIDENT_YEAR,
-    `Region: Preparedness`,
-    measure,
-    pop,
-    fill = list(
-      numerator = 0,
-      denominator = 0,
-      prop = NA_real_,
-      prop_label = NA_character_,
-      lower_ci = NA_real_,
-      upper_ci = NA_real_
-    )
-  )
+## results services -------------------------------------------------------
 
-# services
-asthma_01_result_services <- nemsqar::asthma_01(
-  df = NULL,
-  patient_scene_table = patient_scene_table,
-  response_table = response_table,
-  situation_table = situation_table,
-  medications_table = medications_table,
-  erecord_01_col = FACT_INCIDENT_PK,
-  incident_date_col = INCIDENT_DATE,
-  patient_DOB_col = PATIENT_DATE_OF_BIRTH_E_PATIENT_17,
-  epatient_15_col = PATIENT_AGE_E_PATIENT_15,
-  epatient_16_col = PATIENT_AGE_UNITS_E_PATIENT_16,
-  eresponse_05_col = RESPONSE_TYPE_OF_SERVICE_REQUESTED_WITH_CODE_E_RESPONSE_05,
-  esituation_11_col = SITUATION_PROVIDER_PRIMARY_IMPRESSION_CODE_AND_DESCRIPTION_E_SITUATION_11,
-  esituation_12_col = SITUATION_PROVIDER_SECONDARY_IMPRESSION_DESCRIPTION_AND_CODE_E_SITUATION_12,
-  emedications_03_col = MEDICATION_GIVEN_OR_ADMINISTERED_DESCRIPTION_AND_RXCUI_CODE_E_MEDICATIONS_03,
-  confidence_interval = TRUE,
-  method = "w",
-  conf.level = 0.95,
-  correct = TRUE,
-  .by = c(INCIDENT_YEAR, AGENCY_NAME_D_AGENCY_03)
-) |>
+# get start time
+tictoc::tic(msg = "asthma_01_result_services")
+
+### services ----
+asthma_01_result_services <- mirai::mirai_map(
+  report_years,
+  \(yr, ps, rsp, sit, med) {
+    # parallelize by year
+    ps_y <- ps |> dplyr::filter(INCIDENT_YEAR == yr)
+    rsp_y <- rsp |> dplyr::filter(INCIDENT_YEAR == yr)
+    sit_y <- sit |> dplyr::filter(INCIDENT_YEAR == yr)
+    med_y <- med |> dplyr::filter(INCIDENT_YEAR == yr)
+
+    # run function in parallel
+    nemsqar::asthma_01(
+      df = NULL,
+      patient_scene_table = ps_y,
+      response_table = rsp_y,
+      situation_table = sit_y,
+      medications_table = med_y,
+      erecord_01_col = FACT_INCIDENT_PK,
+      incident_date_col = INCIDENT_DATE,
+      patient_DOB_col = PATIENT_DATE_OF_BIRTH_E_PATIENT_17,
+      epatient_15_col = PATIENT_AGE_E_PATIENT_15,
+      epatient_16_col = PATIENT_AGE_UNITS_E_PATIENT_16,
+      eresponse_05_col = RESPONSE_TYPE_OF_SERVICE_REQUESTED_WITH_CODE_E_RESPONSE_05,
+      esituation_11_col = SITUATION_PROVIDER_PRIMARY_IMPRESSION_CODE_AND_DESCRIPTION_E_SITUATION_11,
+      esituation_12_col = SITUATION_PROVIDER_SECONDARY_IMPRESSION_DESCRIPTION_AND_CODE_E_SITUATION_12,
+      emedications_03_col = MEDICATION_GIVEN_OR_ADMINISTERED_DESCRIPTION_AND_RXCUI_CODE_E_MEDICATIONS_03,
+      confidence_interval = TRUE,
+      method = "w",
+      conf.level = 0.95,
+      correct = TRUE,
+      .by = c(INCIDENT_YEAR, AGENCY_NAME_D_AGENCY_03)
+    )
+  },
+  .args = list(
+    ps = patient_scene_table_s,
+    rsp = response_table_s,
+    sit = situation_table_s,
+    med = medications_table_s
+  )
+)[.progress] |>
+  dplyr::bind_rows() |>
   tidyr::complete(
     INCIDENT_YEAR,
     AGENCY_NAME_D_AGENCY_03,
@@ -525,9 +613,15 @@ asthma_01_result_services <- nemsqar::asthma_01(
     )
   )
 
-### EXPORT =====================================================================
+# total time
+time_result_services <- tictoc::toc()
 
-### population exports #########################################################
+# unburden daemons
+mirai::daemons(n = 0)
+
+# EXPORT =====================================================================
+
+## population exports #########################################################
 
 export_nemsqa_data(
   pattern = "asthma_01_pop",
@@ -535,10 +629,18 @@ export_nemsqa_data(
   folder = "population"
 )
 
-### results exports ############################################################
+## results exports ############################################################
 
 export_nemsqa_data(
   pattern = "asthma_01_result",
   measure = "Asthma-01",
   folder = "result"
+)
+
+## results exports ############################################################
+
+export_nemsqa_data(
+  pattern = "asthma_01_missingness|asthma_01_missings",
+  measure = "Asthma-01",
+  folder = "missings"
 )

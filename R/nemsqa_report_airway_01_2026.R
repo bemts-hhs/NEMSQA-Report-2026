@@ -7,6 +7,12 @@
 # assume that nemsqa_report_prep_2026.R was already ran to load needed packages
 # and project-specific custom functions in the project
 ###_____________________________________________________________________________
+# For any section that includes parallel processing, the intent is to run the
+# tictoc chunks together with the nemsqar / mirai parallel processing chunks so
+# that function time benchmarking can happen. This is not required, but will
+# help check how parallel processing is performing, and if parallel processing
+# should be used at all for certain NEMSQA measure analyses.
+###___________________________________________________________________________
 
 # DATA -----------------------------------------------------------------------
 

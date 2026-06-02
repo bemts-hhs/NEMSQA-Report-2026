@@ -7,6 +7,12 @@
 # assume that nemsqa_report_prep_2026.R was already ran to load needed packages
 # and project-specific custom functions in the project
 ###_____________________________________________________________________________
+# For any section that includes parallel processing, the intent is to run the
+# tictoc chunks together with the nemsqar / mirai parallel processing chunks so
+# that function time benchmarking can happen. This is not required, but will
+# help check how parallel processing is performing, and if parallel processing
+# should be used at all for certain NEMSQA measure analyses.
+###___________________________________________________________________________
 
 # DATA -----------------------------------------------------------------------
 
@@ -174,6 +180,9 @@ airway_05_pop_filter_process <- airway_05_pop$filter_process
 
 ### missingness results for 2021-2025 ----
 airway_05_missings <- airway_05_pop$missingness
+
+# set up daemons
+mirai::daemons(n = 13)
 
 # get airway_05_population data for each year using mirai and mori -------
 
@@ -506,7 +515,7 @@ airway_05_result_counties <- nemsqar::airway_05(
 # start time counties / years
 tictoc::tic(msg = "airway_05_result_counties_years")
 
-### counties ----
+### counties years ----
 airway_05_result_counties_years <- mirai::mirai_map(
   report_years,
   \(yr, ps, rsp, arr, pro, vit) {
