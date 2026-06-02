@@ -13,46 +13,29 @@
 # tables imported in alphabetical order
 # tables do not need to be loaded again if already in memory
 
-### medications tables ###########################################################
-medications_2021 <- import_nemsqa_data(table = "medications", year = 2021)
-medications_2022 <- import_nemsqa_data(table = "medications", year = 2022)
-medications_2023 <- import_nemsqa_data(table = "medications", year = 2023)
-medications_2024 <- import_nemsqa_data(table = "medications", year = 2024)
-
-# bind rows for the medications table
-medications_rbind <- dplyr::bind_rows(
-  medications_2021,
-  medications_2022,
-  medications_2023,
-  medications_2024
+# medications tables -----------------------------------------------------
+medications_table <- load_nemsqa_parallel(
+  table = "medications",
+  year = 2021:2025,
+  cores = 13
 )
 
-# set up the medications table for manipulations
-medications_table <- medications_rbind |>
-  clean_names_dates_data()
+# share the medications table
+medications_table_s <- mori::share(medications_table)
 
-### patient/scene tables #########################################################
-# given that patient and scene data are 1-1 relationship, join those tables
-patient_scene_2021 <- import_nemsqa_data(table = "patient_scene", year = 2021)
-patient_scene_2022 <- import_nemsqa_data(table = "patient_scene", year = 2022)
-patient_scene_2023 <- import_nemsqa_data(table = "patient_scene", year = 2023)
-patient_scene_2024 <- import_nemsqa_data(table = "patient_scene", year = 2024)
-
-# bind rows for the patient/scene table
-patient_scene_rbind <- dplyr::bind_rows(
-  patient_scene_2021,
-  patient_scene_2022,
-  patient_scene_2023,
-  patient_scene_2024
+# patient tables ---------------------------------------------------------
+# Utilize mirai for asynchronous loading
+# automatically bind rows
+patient_scene_clean <- load_nemsqa_parallel(
+  table = "patient_scene",
+  years = 2021:2025,
+  cores = 13
 )
-
-# set up patient/scene table for manipulations
-patient_scene_clean <- patient_scene_rbind |>
-  clean_names_dates_data()
 
 # final manipulations on the patient/scene table
 # handle multiple issues with location using external data sources with
 # consistent names
+
 patient_scene_table <- patient_scene_clean |>
   dplyr::left_join(
     zipcodes,
@@ -115,45 +98,36 @@ patient_scene_table <- patient_scene_clean |>
       SCENE_INCIDENT_STATE_NAME_E_SCENE_18,
       ignore.case = TRUE
     )
+  ) |>
+  dplyr::mutate(
+    SCENE_INCIDENT_COUNTY_NAME_E_SCENE_21 = factor(
+      SCENE_INCIDENT_COUNTY_NAME_E_SCENE_21
+    )
   )
 
+# share the patient_scene_table
+patient_scene_table_s <- mori::share(patient_scene_table)
 
-### response tables ##############################################################
-response_2021 <- import_nemsqa_data(table = "response", year = 2021)
-response_2022 <- import_nemsqa_data(table = "response", year = 2022)
-response_2023 <- import_nemsqa_data(table = "response", year = 2023)
-response_2024 <- import_nemsqa_data(table = "response", year = 2024)
-
-# bind rows for the response table
-response_rbind <- dplyr::bind_rows(
-  response_2021,
-  response_2022,
-  response_2023,
-  response_2024
+# response tables --------------------------------------------------------
+response_table <- load_nemsqa_parallel(
+  table = "response",
+  years = 2021:2025,
+  cores = 13
 )
 
-# set up response table for manipulations
-response_table <- response_rbind |>
-  clean_names_dates_data()
+# share the response table
+response_table_s <- mori::share(response_table)
 
-### situation tables #############################################################
-situation_2021 <- import_nemsqa_data(table = "situation", year = 2021)
-situation_2022 <- import_nemsqa_data(table = "situation", year = 2022)
-situation_2023 <- import_nemsqa_data(table = "situation", year = 2023)
-situation_2024 <- import_nemsqa_data(table = "situation", year = 2024)
-
-# bind rows for the situation table
-situation_rbind <- dplyr::bind_rows(
-  situation_2021,
-  situation_2022,
-  situation_2023,
-  situation_2024
-)
-
+# situation tables -------------------------------------------------------
 # set up situation table for manipulations
-situation_table <- situation_rbind |>
-  clean_names_dates_data()
+situation_table <- load_nemsqa_parallel(
+  table = "situation",
+  years = 2021:2025,
+  cores = 13
+)
 
+# Share the situation_table
+situation_table_s <- mori::share(situation_table)
 
 ### CALCULATIONS ---------------------------------------------------------------
 
@@ -161,8 +135,9 @@ situation_table <- situation_rbind |>
 
 ### asthma-01 populations ########################################################
 
-# over all years 2021-2024
-asthma_01_pop <- asthma_01_population(
+# population over all years 2021-2025 ------------------------------------
+
+asthma_01_pop <- nemsqar::asthma_01_population(
   df = NULL,
   patient_scene_table = patient_scene_table,
   response_table = response_table,
@@ -182,104 +157,65 @@ asthma_01_pop <- asthma_01_population(
 # population results for 2021-2024
 asthma_01_pop_filter_process <- asthma_01_pop$filter_process
 
-# 2021
-asthma_01_pop_2021 <- asthma_01_population(
-  df = NULL,
-  patient_scene_table = patient_scene_table |>
-    dplyr::filter(INCIDENT_YEAR == 2021),
-  response_table = response_table |> dplyr::filter(INCIDENT_YEAR == 2021),
-  situation_table = situation_table |> dplyr::filter(INCIDENT_YEAR == 2021),
-  medications_table = medications_table |> dplyr::filter(INCIDENT_YEAR == 2021),
-  erecord_01_col = FACT_INCIDENT_PK,
-  incident_date_col = INCIDENT_DATE,
-  patient_DOB_col = PATIENT_DATE_OF_BIRTH_E_PATIENT_17,
-  epatient_15_col = PATIENT_AGE_E_PATIENT_15,
-  epatient_16_col = PATIENT_AGE_UNITS_E_PATIENT_16,
-  eresponse_05_col = RESPONSE_TYPE_OF_SERVICE_REQUESTED_WITH_CODE_E_RESPONSE_05,
-  esituation_11_col = SITUATION_PROVIDER_PRIMARY_IMPRESSION_CODE_AND_DESCRIPTION_E_SITUATION_11,
-  esituation_12_col = SITUATION_PROVIDER_SECONDARY_IMPRESSION_DESCRIPTION_AND_CODE_E_SITUATION_12,
-  emedications_03_col = MEDICATION_GIVEN_OR_ADMINISTERED_DESCRIPTION_AND_RXCUI_CODE_E_MEDICATIONS_03
+# population missingness results for 2021-2025
+asthma_01_missings <- asthma_01_pop$missingness
+
+
+# populations over all years 2021-2025 -----------------------------------
+
+# track progress
+tictoc::tic(msg = "asthma_01_pop_years_init")
+
+asthma_01_pop_years_init <- mirai::mirai_map(
+  report_years,
+  \(yr, ps, rsp, sit, med) {
+    # parallelize by year
+    ps_y <- ps |> dplyr::filter(INCIDENT_YEAR == yr)
+    rsp_y <- rsp |> dplyr::filter(INCIDENT_YEAR == yr)
+    sit_y <- sit |> dplyr::filter(INCIDENT_YEAR == yr)
+    med_y <- med |> dplyr::filter(INCIDENT_YEAR == yr)
+
+    # run function in parallel
+    nemsqar::asthma_01_population(
+      df = NULL,
+      patient_scene_table = ps_y,
+      response_table = rsp_y,
+      situation_table = sit_y,
+      medications_table = med_y,
+      erecord_01_col = FACT_INCIDENT_PK,
+      incident_date_col = INCIDENT_DATE,
+      patient_DOB_col = PATIENT_DATE_OF_BIRTH_E_PATIENT_17,
+      epatient_15_col = PATIENT_AGE_E_PATIENT_15,
+      epatient_16_col = PATIENT_AGE_UNITS_E_PATIENT_16,
+      eresponse_05_col = RESPONSE_TYPE_OF_SERVICE_REQUESTED_WITH_CODE_E_RESPONSE_05,
+      esituation_11_col = SITUATION_PROVIDER_PRIMARY_IMPRESSION_CODE_AND_DESCRIPTION_E_SITUATION_11,
+      esituation_12_col = SITUATION_PROVIDER_SECONDARY_IMPRESSION_DESCRIPTION_AND_CODE_E_SITUATION_12,
+      emedications_03_col = MEDICATION_GIVEN_OR_ADMINISTERED_DESCRIPTION_AND_RXCUI_CODE_E_MEDICATIONS_03
+    )
+  },
+  .args = list(
+    ps = patient_scene_table_s,
+    rsp = response_table_s,
+    sit = situation_table_s,
+    med = medications_table_s
+  )
+)[.progress]
+
+# Get total time
+time <- tictoc::toc()
+
+# append years to the population files
+asthma_01_pop_years <- add_year_to_nested(
+  x = asthma_01_pop_years_init,
+  file = "filter_process",
+  years = 2021:2025
 )
 
-# population results 2021
-asthma_01_pop_filter_process_2021 <- asthma_01_pop_2021$filter_process |>
-  dplyr::mutate(YEAR = 2021)
-
-# 2022
-asthma_01_pop_2022 <- asthma_01_population(
-  df = NULL,
-  patient_scene_table = patient_scene_table |>
-    dplyr::filter(INCIDENT_YEAR == 2022),
-  response_table = response_table |> dplyr::filter(INCIDENT_YEAR == 2022),
-  situation_table = situation_table |> dplyr::filter(INCIDENT_YEAR == 2022),
-  medications_table = medications_table |> dplyr::filter(INCIDENT_YEAR == 2022),
-  erecord_01_col = FACT_INCIDENT_PK,
-  incident_date_col = INCIDENT_DATE,
-  patient_DOB_col = PATIENT_DATE_OF_BIRTH_E_PATIENT_17,
-  epatient_15_col = PATIENT_AGE_E_PATIENT_15,
-  epatient_16_col = PATIENT_AGE_UNITS_E_PATIENT_16,
-  eresponse_05_col = RESPONSE_TYPE_OF_SERVICE_REQUESTED_WITH_CODE_E_RESPONSE_05,
-  esituation_11_col = SITUATION_PROVIDER_PRIMARY_IMPRESSION_CODE_AND_DESCRIPTION_E_SITUATION_11,
-  esituation_12_col = SITUATION_PROVIDER_SECONDARY_IMPRESSION_DESCRIPTION_AND_CODE_E_SITUATION_12,
-  emedications_03_col = MEDICATION_GIVEN_OR_ADMINISTERED_DESCRIPTION_AND_RXCUI_CODE_E_MEDICATIONS_03
-)
-
-# population results 2022
-asthma_01_pop_filter_process_2022 <- asthma_01_pop_2022$filter_process |>
-  dplyr::mutate(YEAR = 2022)
-
-# 2023
-asthma_01_pop_2023 <- asthma_01_population(
-  df = NULL,
-  patient_scene_table = patient_scene_table |>
-    dplyr::filter(INCIDENT_YEAR == 2023),
-  response_table = response_table |> dplyr::filter(INCIDENT_YEAR == 2023),
-  situation_table = situation_table |> dplyr::filter(INCIDENT_YEAR == 2023),
-  medications_table = medications_table |> dplyr::filter(INCIDENT_YEAR == 2023),
-  erecord_01_col = FACT_INCIDENT_PK,
-  incident_date_col = INCIDENT_DATE,
-  patient_DOB_col = PATIENT_DATE_OF_BIRTH_E_PATIENT_17,
-  epatient_15_col = PATIENT_AGE_E_PATIENT_15,
-  epatient_16_col = PATIENT_AGE_UNITS_E_PATIENT_16,
-  eresponse_05_col = RESPONSE_TYPE_OF_SERVICE_REQUESTED_WITH_CODE_E_RESPONSE_05,
-  esituation_11_col = SITUATION_PROVIDER_PRIMARY_IMPRESSION_CODE_AND_DESCRIPTION_E_SITUATION_11,
-  esituation_12_col = SITUATION_PROVIDER_SECONDARY_IMPRESSION_DESCRIPTION_AND_CODE_E_SITUATION_12,
-  emedications_03_col = MEDICATION_GIVEN_OR_ADMINISTERED_DESCRIPTION_AND_RXCUI_CODE_E_MEDICATIONS_03
-)
-
-# population results 2023
-asthma_01_pop_filter_process_2023 <- asthma_01_pop_2023$filter_process |>
-  dplyr::mutate(YEAR = 2023)
-
-# 2024
-asthma_01_pop_2024 <- asthma_01_population(
-  df = NULL,
-  patient_scene_table = patient_scene_table |>
-    dplyr::filter(INCIDENT_YEAR == 2024),
-  response_table = response_table |> dplyr::filter(INCIDENT_YEAR == 2024),
-  situation_table = situation_table |> dplyr::filter(INCIDENT_YEAR == 2024),
-  medications_table = medications_table |> dplyr::filter(INCIDENT_YEAR == 2024),
-  erecord_01_col = FACT_INCIDENT_PK,
-  incident_date_col = INCIDENT_DATE,
-  patient_DOB_col = PATIENT_DATE_OF_BIRTH_E_PATIENT_17,
-  epatient_15_col = PATIENT_AGE_E_PATIENT_15,
-  epatient_16_col = PATIENT_AGE_UNITS_E_PATIENT_16,
-  eresponse_05_col = RESPONSE_TYPE_OF_SERVICE_REQUESTED_WITH_CODE_E_RESPONSE_05,
-  esituation_11_col = SITUATION_PROVIDER_PRIMARY_IMPRESSION_CODE_AND_DESCRIPTION_E_SITUATION_11,
-  esituation_12_col = SITUATION_PROVIDER_SECONDARY_IMPRESSION_DESCRIPTION_AND_CODE_E_SITUATION_12,
-  emedications_03_col = MEDICATION_GIVEN_OR_ADMINISTERED_DESCRIPTION_AND_RXCUI_CODE_E_MEDICATIONS_03
-)
-
-# population results 2024
-asthma_01_pop_filter_process_2024 <- asthma_01_pop_2024$filter_process |>
-  dplyr::mutate(YEAR = 2024)
-
-# asthma-01 populations over the years
-asthma_01_pop_years <- dplyr::bind_rows(
-  asthma_01_pop_filter_process_2021,
-  asthma_01_pop_filter_process_2022,
-  asthma_01_pop_filter_process_2023,
-  asthma_01_pop_filter_process_2024
+# append years to the missingness files
+asthma_01_missingness_years <- add_year_to_nested(
+  x = asthma_01_pop_years_init,
+  file = "missingness",
+  years = 2021:2025
 )
 
 # plot population trends over time
@@ -287,13 +223,10 @@ asthma_01_pop_years |>
   plot_nemsqa_pops(
     type = "col",
     wrap_width = 25,
-    plot_title = "Asthma-01",
-    facets = TRUE,
-    vjust_title = 2,
-    vjust_subtitle = 1.5
+    plot_title = "Asthma-01"
   )
 
-### asthma-01 results ############################################################
+### asthma-01 results ##########################################################
 
 # year
 asthma_01_result_year <- nemsqar::asthma_01(

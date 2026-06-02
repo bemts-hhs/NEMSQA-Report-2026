@@ -1500,7 +1500,7 @@ plot_nemsqa_pops <- function(
   temp_plot <- if (type == "col") {
     # Column chart: Displays count data grouped by Year
     ggplot2::ggplot(
-      df,
+      df |> dplyr::rename(Year = tidyselect::matches("^year$")),
       ggplot2::aes(x = Year, y = count, fill = factor(Year))
     ) +
       ggplot2::geom_col(alpha = 0.5, position = ggplot2::position_dodge())

@@ -1,4 +1,4 @@
-### IOWA NEMSQA REPORT AIRWAY-05 2026 ------------------------------------------
+# IOWA NEMSQA REPORT AIRWAY-05 2026 ------------------------------------------
 
 ###_____________________________________________________________________________
 # this script will contain all reporting calculations for Airway-05
@@ -8,12 +8,12 @@
 # and project-specific custom functions in the project
 ###_____________________________________________________________________________
 
-### DATA -----------------------------------------------------------------------
+# DATA -----------------------------------------------------------------------
 
 # tables imported in alphabetical order
 # tables do not need to be loaded again if already in memory
 
-# arrest tables ----------------------------------------------------------
+## arrest tables ----------------------------------------------------------
 # Utilize mirai for asynchronous loading
 # automatically bind rows
 arrest_table <- load_nemsqa_parallel(
@@ -25,7 +25,7 @@ arrest_table <- load_nemsqa_parallel(
 # share the arrest table
 arrest_table_s <- mori::share(arrest_table)
 
-# patient tables ---------------------------------------------------------
+## patient tables ---------------------------------------------------------
 # Utilize mirai for asynchronous loading
 # automatically bind rows
 patient_scene_clean <- load_nemsqa_parallel(
@@ -34,7 +34,7 @@ patient_scene_clean <- load_nemsqa_parallel(
   cores = 13
 )
 
-# final manipulations on the patient/scene table
+### final manipulations on the patient/scene table
 # handle multiple issues with location using external data sources with
 # consistent names
 
@@ -110,7 +110,7 @@ patient_scene_table <- patient_scene_clean |>
 # share the patient_scene_table
 patient_scene_table_s <- mori::share(patient_scene_table)
 
-# procedures tables ------------------------------------------------------
+## procedures tables ------------------------------------------------------
 procedures_table <- load_nemsqa_parallel(
   table = "procedures",
   years = 2021:2025,
@@ -120,7 +120,7 @@ procedures_table <- load_nemsqa_parallel(
 # share the procedures table
 procedures_table_s <- mori::share(procedures_table)
 
-# response tables --------------------------------------------------------
+## response tables --------------------------------------------------------
 response_table <- load_nemsqa_parallel(
   table = "response",
   years = 2021:2025,
@@ -130,7 +130,7 @@ response_table <- load_nemsqa_parallel(
 # share the response table
 response_table_s <- mori::share(response_table)
 
-# vitals tables ----------------------------------------------------------
+## vitals tables ----------------------------------------------------------
 vitals_table <- load_nemsqa_parallel(
   table = "vitals",
   years = 2021:2025,
@@ -140,13 +140,13 @@ vitals_table <- load_nemsqa_parallel(
 # share the vitals table
 vitals_table_s <- mori::share(vitals_table)
 
-### CALCULATIONS ---------------------------------------------------------------
+# CALCULATIONS ---------------------------------------------------------------
 
-### Airway-05 ==================================================================
+## Airway-05 ==================================================================
 
-### airway-05 populations ########################################################
+# airway-05 populations ########################################################
 
-# populations over all years 2021-2025 -----------------------------------
+## populations over all years 2021-2025 -----------------------------------
 
 airway_05_pop <- nemsqar::airway_05_population(
   df = NULL,
@@ -169,10 +169,10 @@ airway_05_pop <- nemsqar::airway_05_population(
   eprocedures_03_col = PROCEDURE_PERFORMED_DESCRIPTION_AND_CODE_E_PROCEDURES_03
 )
 
-# population results for 2021-2025
+### population results for 2021-2025 ----
 airway_05_pop_filter_process <- airway_05_pop$filter_process
 
-# missingness results for 2021-2025
+### missingness results for 2021-2025 ----
 airway_05_missings <- airway_05_pop$missingness
 
 # get airway_05_population data for each year using mirai and mori -------
@@ -224,21 +224,21 @@ airway_05_pop_years_init <- mirai::mirai_map(
 # Get total time
 time <- tictoc::toc()
 
-# append years to the population files
+## append years to the population files ----
 airway_05_pop_years <- add_year_to_nested(
   x = airway_05_pop_years_init,
   file = "filter_process",
   years = 2021:2025
 )
 
-# append years to the missingness files
+## append years to the missingness files ----
 airway_05_missingness_years <- add_year_to_nested(
   x = airway_05_pop_years_init,
   file = "missingness",
   years = 2021:2025
 )
 
-# plot population trends over time
+## plot population trends over time ----
 airway_05_pop_years |>
   plot_nemsqa_pops(
     type = "col",
@@ -246,14 +246,14 @@ airway_05_pop_years |>
     plot_title = "Airway-05"
   )
 
-### airway-05 results ############################################################
+# airway-05 results ############################################################
 
-# results years ----------------------------------------------------------
+## results years ----------------------------------------------------------
 
 # get start time
 tictoc::tic(msg = "airway_05_result_year")
 
-# year
+### year ----
 airway_05_result_year <- mirai::mirai_map(
   report_years,
   \(yr, ps, rsp, arr, pro, vit) {
@@ -305,12 +305,12 @@ airway_05_result_year <- mirai::mirai_map(
 time_result_year <- tictoc::toc()
 
 
-# results regions and years ----------------------------------------------
+## results regions and years ----------------------------------------------
 
 # get start time
 tictoc::tic(msg = "airway_05_result_regions_year")
 
-# regions and years
+### regions and years ----
 airway_05_result_regions_years <- mirai::mirai_map(
   report_years,
   \(yr, ps, rsp, arr, pro, vit) {
@@ -382,12 +382,12 @@ airway_05_result_regions_years <- mirai::mirai_map(
 # total time
 time_result_regions_year <- tictoc::toc()
 
-# results regions --------------------------------------------------------
+## results regions --------------------------------------------------------
 
 # get start time
 tictoc::tic(msg = "airway_05_result_regions")
 
-# regions
+### regions ----
 airway_05_result_regions <- mirai::mirai_map(
   report_regions,
   \(reg, ps, rsp, arr, pro, vit) {
@@ -454,9 +454,9 @@ airway_05_result_regions <- mirai::mirai_map(
 # total time
 time_result_regions <- tictoc::toc()
 
-# results counties -------------------------------------------------------
+## results counties -------------------------------------------------------
 
-# counties
+### counties ----
 airway_05_result_counties <- nemsqar::airway_05(
   df = NULL,
   patient_scene_table = patient_scene_table |>
@@ -501,12 +501,12 @@ airway_05_result_counties <- nemsqar::airway_05(
     )
   )
 
-# results counties years -------------------------------------------------
+## results counties years -------------------------------------------------
 
 # start time counties / years
 tictoc::tic(msg = "airway_05_result_counties_years")
 
-# counties
+### counties ----
 airway_05_result_counties_years <- mirai::mirai_map(
   report_years,
   \(yr, ps, rsp, arr, pro, vit) {
@@ -571,9 +571,9 @@ airway_05_result_counties_years <- mirai::mirai_map(
 # total time
 time_result_counties_years <- tictoc::toc()
 
-# results overall --------------------------------------------------------
+## results overall --------------------------------------------------------
 
-# overall
+### overall ----
 airway_05_result_overall <- nemsqar::airway_05(
   df = NULL,
   patient_scene_table = patient_scene_table,
@@ -599,12 +599,12 @@ airway_05_result_overall <- nemsqar::airway_05(
   correct = TRUE
 )
 
-# results services -------------------------------------------------------
+## results services -------------------------------------------------------
 
 # get start time
 tictoc::tic(msg = "airway_05_result_services")
 
-# services
+### services ----
 airway_05_result_services <- mirai::mirai_map(
   report_years,
   \(yr, ps, rsp, arr, pro, vit) {
@@ -674,7 +674,7 @@ mirai::daemons(n = 0)
 
 # EXPORT -----------------------------------------------------------------
 
-### population exports #########################################################
+## population exports #########################################################
 
 export_nemsqa_data(
   pattern = "airway_05_pop",
@@ -682,7 +682,7 @@ export_nemsqa_data(
   folder = "population"
 )
 
-### results exports ############################################################
+## results exports ############################################################
 
 export_nemsqa_data(
   pattern = "airway_05_result",
@@ -690,7 +690,7 @@ export_nemsqa_data(
   folder = "result"
 )
 
-### missingness exports ########################################################
+## missingness exports ########################################################
 
 export_nemsqa_data(
   pattern = "airway_05_missingness|airway_05_missings",
