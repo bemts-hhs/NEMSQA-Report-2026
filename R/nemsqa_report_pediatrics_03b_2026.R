@@ -1,4 +1,4 @@
-### IOWA NEMSQA REPORT PEDIATRICS-03B 2026 -------------------------------------
+# IOWA NEMSQA REPORT PEDIATRICS-03B 2026 -------------------------------------
 
 ###_____________________________________________________________________________
 # this script will contain all reporting calculations for Pediatrics-03b

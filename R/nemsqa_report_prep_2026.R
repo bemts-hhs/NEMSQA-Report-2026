@@ -1,4 +1,4 @@
-### IOWA NEMSQAR REPORT PREP 2026 ----------------------------------------------
+# IOWA NEMSQAR REPORT PREP 2026 ----------------------------------------------
 
 # This script prepares for the analyses using the `nemsqar` package v1.2.0
 # For the shapefiles, it is assumed that the files are downloaded from

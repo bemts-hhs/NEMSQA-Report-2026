@@ -1,4 +1,4 @@
-### IOWA NEMSQA REPORT RESPIRATORY-02 2025 ------------------------------------
+# IOWA NEMSQA REPORT RESPIRATORY-02 2026 ------------------------------------
 
 ###_____________________________________________________________________________
 # this script will contain all reporting calculations for Respiratory-02
@@ -14,51 +14,34 @@
 # should be used at all for certain NEMSQA measure analyses.
 ###___________________________________________________________________________
 
-### DATA -----------------------------------------------------------------------
+# DATA -----------------------------------------------------------------------
 
 # tables imported in alphabetical order
 # tables do not need to be loaded again if already in memory
 
-### medications tables ###########################################################
-medications_2021 <- import_nemsqa_data(table = "medications", year = 2021)
-medications_2022 <- import_nemsqa_data(table = "medications", year = 2022)
-medications_2023 <- import_nemsqa_data(table = "medications", year = 2023)
-medications_2024 <- import_nemsqa_data(table = "medications", year = 2024)
-
-# bind rows for the medications table
-medications_rbind <- dplyr::bind_rows(
-  medications_2021,
-  medications_2022,
-  medications_2023,
-  medications_2024
+## medications tables -----------------------------------------------------
+medications_table <- load_nemsqa_parallel(
+  table = "medications",
+  year = 2021:2025,
+  cores = 13
 )
 
-# set up the medications table for manipulations
-medications_table <- medications_rbind |>
-  clean_names_dates_data()
+# share the medications table
+medications_table_s <- mori::share(medications_table)
 
-### patient/scene tables #########################################################
-# given that patient and scene data are 1-1 relationship, join those tables
-patient_scene_2021 <- import_nemsqa_data(table = "patient_scene", year = 2021)
-patient_scene_2022 <- import_nemsqa_data(table = "patient_scene", year = 2022)
-patient_scene_2023 <- import_nemsqa_data(table = "patient_scene", year = 2023)
-patient_scene_2024 <- import_nemsqa_data(table = "patient_scene", year = 2024)
-
-# bind rows for the patient/scene table
-patient_scene_rbind <- dplyr::bind_rows(
-  patient_scene_2021,
-  patient_scene_2022,
-  patient_scene_2023,
-  patient_scene_2024
+## patient tables ---------------------------------------------------------
+# Utilize mirai for asynchronous loading
+# automatically bind rows
+patient_scene_clean <- load_nemsqa_parallel(
+  table = "patient_scene",
+  years = 2021:2025,
+  cores = 13
 )
 
-# set up patient/scene table for manipulations
-patient_scene_clean <- patient_scene_rbind |>
-  clean_names_dates_data()
-
-# final manipulations on the patient/scene table
+### final manipulations on the patient/scene table ----
 # handle multiple issues with location using external data sources with
 # consistent names
+
 patient_scene_table <- patient_scene_clean |>
   dplyr::left_join(
     zipcodes,
@@ -128,68 +111,52 @@ patient_scene_table <- patient_scene_clean |>
     )
   )
 
-### procedures tables ############################################################
-procedures_2021 <- import_nemsqa_data(table = "procedures", year = 2021)
-procedures_2022 <- import_nemsqa_data(table = "procedures", year = 2022)
-procedures_2023 <- import_nemsqa_data(table = "procedures", year = 2023)
-procedures_2024 <- import_nemsqa_data(table = "procedures", year = 2024)
+### remove patient_scene_clean to preserve memory
+rm(patient_scene_clean)
+gc()
 
-# bind rows for the procedures table
-procedures_rbind <- dplyr::bind_rows(
-  procedures_2021,
-  procedures_2022,
-  procedures_2023,
-  procedures_2024
+# share the patient_scene_table
+patient_scene_table_s <- mori::share(patient_scene_table)
+
+## procedures tables ------------------------------------------------------
+procedures_table <- load_nemsqa_parallel(
+  table = "procedures",
+  years = 2021:2025,
+  cores = 13
 )
 
-# set up procedures table for manipulations
-procedures_table <- procedures_rbind |>
-  clean_names_dates_data()
+# share the procedures table
+procedures_table_s <- mori::share(procedures_table)
 
-### response tables ##############################################################
-response_2021 <- import_nemsqa_data(table = "response", year = 2021)
-response_2022 <- import_nemsqa_data(table = "response", year = 2022)
-response_2023 <- import_nemsqa_data(table = "response", year = 2023)
-response_2024 <- import_nemsqa_data(table = "response", year = 2024)
-
-# bind rows for the response table
-response_rbind <- dplyr::bind_rows(
-  response_2021,
-  response_2022,
-  response_2023,
-  response_2024
+## response tables --------------------------------------------------------
+response_table <- load_nemsqa_parallel(
+  table = "response",
+  years = 2021:2025,
+  cores = 13
 )
 
-# set up response table for manipulations
-response_table <- response_rbind |>
-  clean_names_dates_data()
+# share the response table
+response_table_s <- mori::share(response_table)
 
-### vitals tables ################################################################
-vitals_2021 <- import_nemsqa_data(table = "vitals", year = 2021)
-vitals_2022 <- import_nemsqa_data(table = "vitals", year = 2022)
-vitals_2023 <- import_nemsqa_data(table = "vitals", year = 2023)
-vitals_2024 <- import_nemsqa_data(table = "vitals", year = 2024)
-
-# bind rows for the vitals table
-vitals_rbind <- dplyr::bind_rows(
-  vitals_2021,
-  vitals_2022,
-  vitals_2023,
-  vitals_2024
+## vitals tables ----------------------------------------------------------
+vitals_table <- load_nemsqa_parallel(
+  table = "vitals",
+  years = 2021:2025,
+  cores = 13
 )
 
-# set up vitals table for manipulations
-vitals_table <- vitals_rbind |>
-  clean_names_dates_data()
+# share the vitals table
+vitals_table_s <- mori::share(vitals_table)
 
-### CALCULATIONS ---------------------------------------------------------------
+# CALCULATIONS ---------------------------------------------------------------
 
-### Respiratory-02 =============================================================
+## Respiratory-02 =============================================================
 
-### respirator-02 populations ##################################################
+## respirator-02 populations ##################################################
 
-# over all years 2021-2024
-respiratory_02_pop <- respiratory_02_population(
+### get respiratory-02 populations over all years 2021-2025 ------------
+
+respiratory_02_pop <- nemsqar::respiratory_02_population(
   df = NULL,
   patient_scene_table = patient_scene_table,
   response_table = response_table,
@@ -207,11 +174,14 @@ respiratory_02_pop <- respiratory_02_population(
   eprocedures_03_col = PROCEDURE_PERFORMED_DESCRIPTION_AND_CODE_E_PROCEDURES_03
 )
 
-# population results for 2021-2024
+#### population results for 2021-2025
 respiratory_02_pop_filter_process <- respiratory_02_pop$filter_process
 
+#### population results for 2021-2025
+respiratory_02_missings <- respiratory_02_pop$missingness
+
 # 2021
-respiratory_02_pop_2021 <- respiratory_02_population(
+respiratory_02_pop_2021 <- nemsqar::respiratory_02_population(
   df = NULL,
   patient_scene_table = patient_scene_table |>
     dplyr::filter(INCIDENT_YEAR == 2021),
@@ -235,7 +205,7 @@ respiratory_02_pop_filter_process_2021 <- respiratory_02_pop_2021$filter_process
   dplyr::mutate(YEAR = 2021)
 
 # 2022
-respiratory_02_pop_2022 <- respiratory_02_population(
+respiratory_02_pop_2022 <- nemsqar::respiratory_02_population(
   df = NULL,
   patient_scene_table = patient_scene_table |>
     dplyr::filter(INCIDENT_YEAR == 2022),
@@ -259,7 +229,7 @@ respiratory_02_pop_filter_process_2022 <- respiratory_02_pop_2022$filter_process
   dplyr::mutate(YEAR = 2022)
 
 # 2023
-respiratory_02_pop_2023 <- respiratory_02_population(
+respiratory_02_pop_2023 <- nemsqar::respiratory_02_population(
   df = NULL,
   patient_scene_table = patient_scene_table |>
     dplyr::filter(INCIDENT_YEAR == 2023),
@@ -283,7 +253,7 @@ respiratory_02_pop_filter_process_2023 <- respiratory_02_pop_2023$filter_process
   dplyr::mutate(YEAR = 2023)
 
 # 2024
-respiratory_02_pop_2024 <- respiratory_02_population(
+respiratory_02_pop_2024 <- nemsqar::respiratory_02_population(
   df = NULL,
   patient_scene_table = patient_scene_table |>
     dplyr::filter(INCIDENT_YEAR == 2024),
@@ -543,9 +513,9 @@ respiratory_02_result_services <- nemsqar::respiratory_02(
     )
   )
 
-### EXPORT =====================================================================
+# EXPORT =====================================================================
 
-### population exports #########################################################
+## population exports #########################################################
 
 export_nemsqa_data(
   pattern = "respiratory_02_pop",
@@ -553,10 +523,18 @@ export_nemsqa_data(
   folder = "population"
 )
 
-### results exports ############################################################
+## results exports ############################################################
 
 export_nemsqa_data(
   pattern = "respiratory_02_result",
   measure = "Respiratory-02",
   folder = "result"
+)
+
+## missingness exports ########################################################
+
+export_nemsqa_data(
+  pattern = "respiratory_02_(?:missings|missingness)",
+  measure = "Respiratory-02",
+  folder = "missings"
 )
