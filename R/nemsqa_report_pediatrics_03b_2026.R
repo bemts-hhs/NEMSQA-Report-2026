@@ -1,10 +1,10 @@
-### IOWA NEMSQA REPORT PEDIATRICS-03B 2025 -------------------------------------
+### IOWA NEMSQA REPORT PEDIATRICS-03B 2026 -------------------------------------
 
 ###_____________________________________________________________________________
 # this script will contain all reporting calculations for Pediatrics-03b
-# use nemsqa_report_prep_2025.R to get critical functions into memory
+# use nemsqa_report_prep_2026.R to get critical functions into memory
 ###_____________________________________________________________________________
-# assume that nemsqa_report_prep_2025.R was already ran to load needed packages
+# assume that nemsqa_report_prep_2026.R was already ran to load needed packages
 # and project-specific custom functions in the project
 ###_____________________________________________________________________________
 # For any section that includes parallel processing, the intent is to run the
@@ -13,22 +13,18 @@
 # help check how parallel processing is performing, and if parallel processing
 # should be used at all for certain NEMSQA measure analyses.
 ###___________________________________________________________________________
+# In this specific measure, we will only use mirai to ingest the tables, but
+# then run the functions as usual without parallel processing given that the
+# exam tables are too large, and as of mori 0.2.0, it does not seem to handle
+# sharing dataframes as large as 99 million rows or so.
+###___________________________________________________________________________
 
-### DATA -----------------------------------------------------------------------
+# DATA -----------------------------------------------------------------------
 
 # tables imported in alphabetical order
 # tables do not need to be loaded again if already in memory
 
-### exam tables ##################################################################
-
-###_____________________________________________________________________________
-# handle the exam tables differently due to size
-# workflow will change from going through the dplyr::bind_rows() set to
-# manipulations to manipulations before dplyr::bind_rows()
-# import and clean each file
-# break up the 2024 file into its 2 month parts (6) and clean each
-# then bind all together at the end
-###_____________________________________________________________________________
+## exam tables ------------------------------------------------------------
 
 # Parallel process
 exam_table <- load_nemsqa_parallel(
@@ -42,131 +38,38 @@ exam_table <- load_nemsqa_parallel(
     "2024_3",
     "2024_4",
     "2024_5",
-    "2024_6"
+    "2024_6",
+    "2025_1",
+    "2025_2",
+    "2025_3",
+    "2025_4",
+    "2025_5",
+    "2025_6",
+    "2025_7"
   ),
-  cores = 10
-)
-###_____________________________________________________________________________
-# Keep sequential process for reference
-# # 2021
-# exam_2021 <- import_nemsqa_data(table = "exam", year = 2021)
-#
-# exam_2021_clean <- exam_2021 |>
-#   clean_names_dates_data()
-#
-# # 2022
-# exam_2022 <- import_nemsqa_data(table = "exam", year = 2022)
-#
-# exam_2022_clean <- exam_2022 |>
-#   clean_names_dates_data()
-#
-# # 2023
-# exam_2023 <- import_nemsqa_data(table = "exam", year = 2023)
-#
-# exam_2023_clean <- exam_2023 |>
-#   clean_names_dates_data()
-#
-# # 2024 is broken up into several tables due to its size, ~ 40m rows
-#
-# # 2024 jan-feb
-# exam_2024_1 <- import_nemsqa_data(table = "exam", year = "2024_1")
-#
-# exam_2024_1_clean <- exam_2024_1 |>
-#   clean_names_dates_data()
-#
-# # 2024 mar-apr
-# exam_2024_2 <- import_nemsqa_data(table = "exam", year = "2024_2")
-#
-# exam_2024_2_clean <- exam_2024_2 |>
-#   clean_names_dates_data()
-#
-# # 2024 may-june
-# exam_2024_3 <- import_nemsqa_data(table = "exam", year = "2024_3")
-#
-# exam_2024_3_clean <- exam_2024_3 |>
-#   clean_names_dates_data()
-#
-# # 2024 july-aug
-# exam_2024_4 <- import_nemsqa_data(table = "exam", year = "2024_4")
-#
-# exam_2024_4_clean <- exam_2024_4 |>
-#   clean_names_dates_data()
-#
-# # 2024 sept-oct
-# exam_2024_5 <- import_nemsqa_data(table = "exam", year = "2024_5")
-#
-# exam_2024_5_clean <- exam_2024_5 |>
-#   clean_names_dates_data()
-#
-# # 2024 nov-dec
-# exam_2024_6 <- import_nemsqa_data(table = "exam", year = "2024_6")
-#
-# exam_2024_6_clean <- exam_2024_6 |>
-#   clean_names_dates_data()
-#
-# # bind rows for the exam table
-# exam_table <- dplyr::bind_rows(
-#   exam_2021_clean,
-#   exam_2022_clean,
-#   exam_2023_clean,
-#   exam_2024_1_clean,
-#   exam_2024_2_clean,
-#   exam_2024_3_clean,
-#   exam_2024_4_clean,
-#   exam_2024_5_clean,
-#   exam_2024_6_clean
-# )
-###_____________________________________________________________________________
-
-### medications tables ###########################################################
-medications_2021 <- import_nemsqa_data(table = "medications", year = 2021)
-medications_2022 <- import_nemsqa_data(table = "medications", year = 2022)
-medications_2023 <- import_nemsqa_data(table = "medications", year = 2023)
-medications_2024 <- import_nemsqa_data(table = "medications", year = 2024)
-
-# bind rows for the medications table
-medications_rbind <- dplyr::bind_rows(
-  medications_2021,
-  medications_2022,
-  medications_2023,
-  medications_2024
+  cores = 13
 )
 
-# set up the medications table for manipulations
-medications_table <- medications_rbind |>
-  clean_names_dates_data()
+## medications tables -----------------------------------------------------
+medications_table <- load_nemsqa_parallel(
+  table = "medications",
+  year = 2021:2025,
+  cores = 13
+)
 
-### patient/scene tables #########################################################
-
-# parallel process
-patient_scene_table <- load_nemsqa_parallel(
+## patient tables ---------------------------------------------------------
+# Utilize mirai for asynchronous loading
+# automatically bind rows
+patient_scene_clean <- load_nemsqa_parallel(
   table = "patient_scene",
-  years = 2021:2024,
-  cores = 10
+  years = 2021:2025,
+  cores = 13
 )
 
-# Keep sequential processing for posterity
-# # given that patient and scene data are 1-1 relationship, join those tables
-# patient_scene_2021 <- import_nemsqa_data(table = "patient_scene", year = 2021)
-# patient_scene_2022 <- import_nemsqa_data(table = "patient_scene", year = 2022)
-# patient_scene_2023 <- import_nemsqa_data(table = "patient_scene", year = 2023)
-# patient_scene_2024 <- import_nemsqa_data(table = "patient_scene", year = 2024)
-#
-# # bind rows for the patient/scene table
-# patient_scene_rbind <- dplyr::bind_rows(
-#   patient_scene_2021,
-#   patient_scene_2022,
-#   patient_scene_2023,
-#   patient_scene_2024
-# )
-#
-# # set up patient/scene table for manipulations
-# patient_scene_clean <- patient_scene_rbind |>
-#   clean_names_dates_data()
-
-# final manipulations on the patient/scene table
+### final manipulations on the patient/scene table ----
 # handle multiple issues with location using external data sources with
 # consistent names
+
 patient_scene_table <- patient_scene_clean |>
   dplyr::left_join(
     zipcodes,
@@ -229,35 +132,29 @@ patient_scene_table <- patient_scene_clean |>
       SCENE_INCIDENT_STATE_NAME_E_SCENE_18,
       ignore.case = TRUE
     )
+  ) |>
+  dplyr::mutate(
+    SCENE_INCIDENT_COUNTY_NAME_E_SCENE_21 = factor(
+      SCENE_INCIDENT_COUNTY_NAME_E_SCENE_21
+    )
   )
 
-### response tables ##############################################################
-response_2021 <- import_nemsqa_data(table = "response", year = 2021)
-response_2022 <- import_nemsqa_data(table = "response", year = 2022)
-response_2023 <- import_nemsqa_data(table = "response", year = 2023)
-response_2024 <- import_nemsqa_data(table = "response", year = 2024)
-
-# bind rows for the response table
-response_rbind <- dplyr::bind_rows(
-  response_2021,
-  response_2022,
-  response_2023,
-  response_2024
+## response tables --------------------------------------------------------
+response_table <- load_nemsqa_parallel(
+  table = "response",
+  years = 2021:2025,
+  cores = 13
 )
 
-# set up response table for manipulations
-response_table <- response_rbind |>
-  clean_names_dates_data()
+# CALCULATIONS ---------------------------------------------------------------
 
+## Pediatrics-03b =============================================================
 
-### CALCULATIONS ---------------------------------------------------------------
+## pediatrics-03b populations #################################################
 
-### Pediatrics-03b =============================================================
+### populations over all years 2021-2025 -----------------------------------
 
-### pediatrics-03b populations #################################################
-
-# over all years 2021-2024
-pediatrics_03b_pop <- pediatrics_03b_population(
+pediatrics_03b_pop <- nemsqar::pediatrics_03b_population(
   df = NULL,
   patient_scene_table = patient_scene_table,
   response_table = response_table,
@@ -275,11 +172,18 @@ pediatrics_03b_pop <- pediatrics_03b_population(
   emedications_04_col = MEDICATION_ADMINISTERED_ROUTE_E_MEDICATIONS_04
 )
 
-# population results for 2021-2024
+#### population results for 2021-2025
 pediatrics_03b_pop_filter_process <- pediatrics_03b_pop$filter_process
 
-# 2021
-pediatrics_03b_pop_2021 <- pediatrics_03b_population(
+#### population missingness results for 2021-2025
+pediatrics_03b_missings <- pediatrics_03b_pop$missingness
+
+
+### get pediatrics-03b population data for each year -----------------------
+
+#### 2021 -------------------------------------------------------------------
+
+pediatrics_03b_pop_2021 <- nemsqar::pediatrics_03b_population(
   df = NULL,
   patient_scene_table = patient_scene_table |>
     dplyr::filter(INCIDENT_YEAR == 2021),
@@ -298,12 +202,18 @@ pediatrics_03b_pop_2021 <- pediatrics_03b_population(
   emedications_04_col = MEDICATION_ADMINISTERED_ROUTE_E_MEDICATIONS_04
 )
 
-# population results 2021
+##### population results 2021 ----
 pediatrics_03b_pop_filter_process_2021 <- pediatrics_03b_pop_2021$filter_process |>
   dplyr::mutate(YEAR = 2021)
 
-# 2022
-pediatrics_03b_pop_2022 <- pediatrics_03b_population(
+##### population missingness 2021 ----
+pediatrics_03b_missingness_2021 <- pediatrics_03b_pop_2021$missingness |>
+  dplyr::mutate(YEAR = 2021)
+
+
+#### 2022 -------------------------------------------------------------------
+
+pediatrics_03b_pop_2022 <- nemsqar::pediatrics_03b_population(
   df = NULL,
   patient_scene_table = patient_scene_table |>
     dplyr::filter(INCIDENT_YEAR == 2022),
@@ -322,12 +232,18 @@ pediatrics_03b_pop_2022 <- pediatrics_03b_population(
   emedications_04_col = MEDICATION_ADMINISTERED_ROUTE_E_MEDICATIONS_04
 )
 
-# population results 2022
+##### population results 2022 ----
 pediatrics_03b_pop_filter_process_2022 <- pediatrics_03b_pop_2022$filter_process |>
   dplyr::mutate(YEAR = 2022)
 
-# 2023
-pediatrics_03b_pop_2023 <- pediatrics_03b_population(
+##### population missingness 2022 ----
+pediatrics_03b_missingness_2022 <- pediatrics_03b_pop_2022$missingness |>
+  dplyr::mutate(YEAR = 2022)
+
+
+#### 2023 -------------------------------------------------------------------
+
+pediatrics_03b_pop_2023 <- nemsqar::pediatrics_03b_population(
   df = NULL,
   patient_scene_table = patient_scene_table |>
     dplyr::filter(INCIDENT_YEAR == 2023),
@@ -346,12 +262,18 @@ pediatrics_03b_pop_2023 <- pediatrics_03b_population(
   emedications_04_col = MEDICATION_ADMINISTERED_ROUTE_E_MEDICATIONS_04
 )
 
-# population results 2023
+##### population results 2023
 pediatrics_03b_pop_filter_process_2023 <- pediatrics_03b_pop_2023$filter_process |>
   dplyr::mutate(YEAR = 2023)
 
-# 2024
-pediatrics_03b_pop_2024 <- pediatrics_03b_population(
+##### population missingness 2023 ----
+pediatrics_03b_missingness_2023 <- pediatrics_03b_pop_2023$missingness |>
+  dplyr::mutate(YEAR = 2023)
+
+
+#### 2024 -------------------------------------------------------------------
+
+pediatrics_03b_pop_2024 <- nemsqar::pediatrics_03b_population(
   df = NULL,
   patient_scene_table = patient_scene_table |>
     dplyr::filter(INCIDENT_YEAR == 2024),
@@ -370,16 +292,59 @@ pediatrics_03b_pop_2024 <- pediatrics_03b_population(
   emedications_04_col = MEDICATION_ADMINISTERED_ROUTE_E_MEDICATIONS_04
 )
 
-# population results 2024
+##### population results 2024
 pediatrics_03b_pop_filter_process_2024 <- pediatrics_03b_pop_2024$filter_process |>
   dplyr::mutate(YEAR = 2024)
 
-# pediatrics_03b populations over the years
+##### population missingness 2024 ----
+pediatrics_03b_missingness_2024 <- pediatrics_03b_pop_2024$missingness |>
+  dplyr::mutate(YEAR = 2024)
+
+#### 2025 -------------------------------------------------------------------
+
+pediatrics_03b_pop_2025 <- nemsqar::pediatrics_03b_population(
+  df = NULL,
+  patient_scene_table = patient_scene_table |>
+    dplyr::filter(INCIDENT_YEAR == 2025),
+  response_table = response_table |> dplyr::filter(INCIDENT_YEAR == 2025),
+  exam_table = exam_table |> dplyr::filter(INCIDENT_YEAR == 2025),
+  medications_table = medications_table |> dplyr::filter(INCIDENT_YEAR == 2025),
+  erecord_01_col = FACT_INCIDENT_PK,
+  incident_date_col = INCIDENT_DATE,
+  patient_DOB_col = PATIENT_DATE_OF_BIRTH_E_PATIENT_17,
+  epatient_15_col = PATIENT_AGE_E_PATIENT_15,
+  epatient_16_col = PATIENT_AGE_UNITS_E_PATIENT_16,
+  eresponse_05_col = RESPONSE_TYPE_OF_SERVICE_REQUESTED_WITH_CODE_E_RESPONSE_05,
+  eexam_01_col = PATIENT_WEIGHT_IN_KILOGRAMS_E_EXAM_01,
+  eexam_02_col = PATIENT_LENGTH_BASED_COLOR_E_EXAM_02,
+  emedications_03_col = MEDICATION_GIVEN_OR_ADMINISTERED_DESCRIPTION_AND_RXCUI_CODE_E_MEDICATIONS_03,
+  emedications_04_col = MEDICATION_ADMINISTERED_ROUTE_E_MEDICATIONS_04
+)
+
+##### population results 2025
+pediatrics_03b_pop_filter_process_2025 <- pediatrics_03b_pop_2025$filter_process |>
+  dplyr::mutate(YEAR = 2025)
+
+##### population missingness 2025 ----
+pediatrics_03b_missingness_2025 <- pediatrics_03b_pop_2025$missingness |>
+  dplyr::mutate(YEAR = 2025)
+
+### pediatrics_03b populations over the years ----
 pediatrics_03b_pop_years <- dplyr::bind_rows(
   pediatrics_03b_pop_filter_process_2021,
   pediatrics_03b_pop_filter_process_2022,
   pediatrics_03b_pop_filter_process_2023,
-  pediatrics_03b_pop_filter_process_2024
+  pediatrics_03b_pop_filter_process_2024,
+  pediatrics_03b_pop_filter_process_2025
+)
+
+### pediatrics_03b missingness over the years ----
+pediatrics_03b_missingness <- dplyr::bind_rows(
+  pediatrics_03b_missingness_2021,
+  pediatrics_03b_missingness_2022,
+  pediatrics_03b_missingness_2023,
+  pediatrics_03b_missingness_2024,
+  pediatrics_03b_missingness_2025
 )
 
 # plot population trends over time
@@ -393,9 +358,10 @@ pediatrics_03b_pop_years |>
     vjust_subtitle = 1.5
   )
 
-### pediatrics-03b results #####################################################
+## pediatrics-03b results #####################################################
 
-# year
+### results years ----------------------------------------------------------
+
 pediatrics_03b_result_year <- nemsqar::pediatrics_03b(
   df = NULL,
   patient_scene_table = patient_scene_table,
@@ -419,7 +385,9 @@ pediatrics_03b_result_year <- nemsqar::pediatrics_03b(
   .by = INCIDENT_YEAR
 )
 
-# regions and years
+
+### regions and years ------------------------------------------------------
+
 pediatrics_03b_result_regions_years <- nemsqar::pediatrics_03b(
   df = NULL,
   patient_scene_table = patient_scene_table,
@@ -464,7 +432,9 @@ pediatrics_03b_result_regions_years <- nemsqar::pediatrics_03b(
     )
   )
 
-# regions
+
+### regions ----------------------------------------------------------------
+
 pediatrics_03b_result_regions <- nemsqar::pediatrics_03b(
   df = NULL,
   patient_scene_table = patient_scene_table,
@@ -508,7 +478,9 @@ pediatrics_03b_result_regions <- nemsqar::pediatrics_03b(
     )
   )
 
-# counties
+
+### counties ---------------------------------------------------------------
+
 pediatrics_03b_result_counties <- nemsqar::pediatrics_03b(
   df = NULL,
   patient_scene_table = patient_scene_table |>
@@ -550,7 +522,54 @@ pediatrics_03b_result_counties <- nemsqar::pediatrics_03b(
     )
   )
 
-# overall
+
+## counties years ---------------------------------------------------------
+
+pediatrics_03b_result_counties_years <- nemsqar::pediatrics_03b(
+  df = NULL,
+  patient_scene_table = patient_scene_table |>
+    dplyr::mutate(
+      SCENE_INCIDENT_COUNTY_NAME_E_SCENE_21 = factor(
+        SCENE_INCIDENT_COUNTY_NAME_E_SCENE_21
+      )
+    ),
+  response_table = response_table,
+  exam_table = exam_table,
+  medications_table = medications_table,
+  erecord_01_col = FACT_INCIDENT_PK,
+  incident_date_col = INCIDENT_DATE,
+  patient_DOB_col = PATIENT_DATE_OF_BIRTH_E_PATIENT_17,
+  epatient_15_col = PATIENT_AGE_E_PATIENT_15,
+  epatient_16_col = PATIENT_AGE_UNITS_E_PATIENT_16,
+  eresponse_05_col = RESPONSE_TYPE_OF_SERVICE_REQUESTED_WITH_CODE_E_RESPONSE_05,
+  eexam_01_col = PATIENT_WEIGHT_IN_KILOGRAMS_E_EXAM_01,
+  eexam_02_col = PATIENT_LENGTH_BASED_COLOR_E_EXAM_02,
+  emedications_03_col = MEDICATION_GIVEN_OR_ADMINISTERED_DESCRIPTION_AND_RXCUI_CODE_E_MEDICATIONS_03,
+  emedications_04_col = MEDICATION_ADMINISTERED_ROUTE_E_MEDICATIONS_04,
+  confidence_interval = TRUE,
+  method = "w",
+  conf.level = 0.95,
+  correct = TRUE,
+  .by = c(INCIDENT_YEAR, SCENE_INCIDENT_COUNTY_NAME_E_SCENE_21)
+) |>
+  tidyr::complete(
+    INCIDENT_YEAR,
+    SCENE_INCIDENT_COUNTY_NAME_E_SCENE_21,
+    measure,
+    pop,
+    fill = list(
+      numerator = 0,
+      denominator = 0,
+      prop = NA_real_,
+      prop_label = NA_character_,
+      lower_ci = NA_real_,
+      upper_ci = NA_real_
+    )
+  )
+
+
+### overall ----------------------------------------------------------------
+
 pediatrics_03b_result_overall <- nemsqar::pediatrics_03b(
   df = NULL,
   patient_scene_table = patient_scene_table,
