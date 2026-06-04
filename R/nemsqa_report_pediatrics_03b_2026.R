@@ -139,6 +139,10 @@ patient_scene_table <- patient_scene_clean |>
     )
   )
 
+### remove patient_scene_clean to preserve memory
+rm(patient_scene_clean)
+gc()
+
 ## response tables --------------------------------------------------------
 response_table <- load_nemsqa_parallel(
   table = "response",
@@ -352,10 +356,7 @@ pediatrics_03b_pop_years |>
   plot_nemsqa_pops(
     type = "col",
     wrap_width = 25,
-    plot_title = "Pediatrics-03b",
-    facets = TRUE,
-    vjust_title = 2,
-    vjust_subtitle = 1.5
+    plot_title = "Pediatrics-03b"
   )
 
 ## pediatrics-03b results #####################################################
@@ -385,8 +386,7 @@ pediatrics_03b_result_year <- nemsqar::pediatrics_03b(
   .by = INCIDENT_YEAR
 )
 
-
-### regions and years ------------------------------------------------------
+### results regions and years ----------------------------------------------
 
 pediatrics_03b_result_regions_years <- nemsqar::pediatrics_03b(
   df = NULL,
@@ -433,7 +433,7 @@ pediatrics_03b_result_regions_years <- nemsqar::pediatrics_03b(
   )
 
 
-### regions ----------------------------------------------------------------
+### results regions --------------------------------------------------------
 
 pediatrics_03b_result_regions <- nemsqar::pediatrics_03b(
   df = NULL,
@@ -479,7 +479,7 @@ pediatrics_03b_result_regions <- nemsqar::pediatrics_03b(
   )
 
 
-### counties ---------------------------------------------------------------
+### results counties -------------------------------------------------------
 
 pediatrics_03b_result_counties <- nemsqar::pediatrics_03b(
   df = NULL,
@@ -523,7 +523,7 @@ pediatrics_03b_result_counties <- nemsqar::pediatrics_03b(
   )
 
 
-## counties years ---------------------------------------------------------
+### results counties years ----------------------------------------------
 
 pediatrics_03b_result_counties_years <- nemsqar::pediatrics_03b(
   df = NULL,
@@ -568,7 +568,7 @@ pediatrics_03b_result_counties_years <- nemsqar::pediatrics_03b(
   )
 
 
-### overall ----------------------------------------------------------------
+### results overall --------------------------------------------------------
 
 pediatrics_03b_result_overall <- nemsqar::pediatrics_03b(
   df = NULL,
@@ -592,7 +592,9 @@ pediatrics_03b_result_overall <- nemsqar::pediatrics_03b(
   correct = TRUE
 )
 
-# services
+
+### results services -------------------------------------------------------
+
 pediatrics_03b_result_services <- nemsqar::pediatrics_03b(
   df = NULL,
   patient_scene_table = patient_scene_table,
@@ -630,9 +632,9 @@ pediatrics_03b_result_services <- nemsqar::pediatrics_03b(
     )
   )
 
-### EXPORT =====================================================================
+# EXPORT =====================================================================
 
-### population exports #########################################################
+## population exports #########################################################
 
 export_nemsqa_data(
   pattern = "pediatrics_03b_pop",
@@ -640,10 +642,18 @@ export_nemsqa_data(
   folder = "population"
 )
 
-### results exports ############################################################
+## results exports ############################################################
 
 export_nemsqa_data(
   pattern = "pediatrics_03b_result",
   measure = "Pediatrics-03b",
   folder = "result"
+)
+
+## missingness exports ########################################################
+
+export_nemsqa_data(
+  pattern = "pediatrics_03b_(?:missings|missingness)",
+  measure = "Pediatrics-03b",
+  folder = "missings"
 )

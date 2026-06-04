@@ -113,6 +113,10 @@ patient_scene_table <- patient_scene_clean |>
     )
   )
 
+### remove patient_scene_clean to preserve memory
+rm(patient_scene_clean)
+gc()
+
 # share the patient_scene_table
 patient_scene_table_s <- mori::share(patient_scene_table)
 
