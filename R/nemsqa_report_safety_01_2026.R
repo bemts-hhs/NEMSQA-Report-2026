@@ -1,10 +1,10 @@
-### IOWA NEMSQA REPORT SAFETY-01 2025 ------------------------------------
+### IOWA NEMSQA REPORT SAFETY-01 2026 ------------------------------------
 
 ###_____________________________________________________________________________
 # this script will contain all reporting calculations for Safety-01
-# use nemsqa_report_prep_2025.R to get critical functions into memory
+# use nemsqa_report_prep_2026.R to get critical functions into memory
 ###_____________________________________________________________________________
-# assume that nemsqa_report_prep_2025.R was already ran to load needed packages
+# assume that nemsqa_report_prep_2026.R was already ran to load needed packages
 # and project-specific custom functions in the project
 ###_____________________________________________________________________________
 # For any section that includes parallel processing, the intent is to run the
@@ -14,33 +14,24 @@
 # should be used at all for certain NEMSQA measure analyses.
 ###___________________________________________________________________________
 
-### DATA -----------------------------------------------------------------------
+# DATA -----------------------------------------------------------------------
 
 # tables imported in alphabetical order
 # tables do not need to be loaded again if already in memory
 
-### patient/scene tables #########################################################
-# given that patient and scene data are 1-1 relationship, join those tables
-patient_scene_2021 <- import_nemsqa_data(table = "patient_scene", year = 2021)
-patient_scene_2022 <- import_nemsqa_data(table = "patient_scene", year = 2022)
-patient_scene_2023 <- import_nemsqa_data(table = "patient_scene", year = 2023)
-patient_scene_2024 <- import_nemsqa_data(table = "patient_scene", year = 2024)
-
-# bind rows for the patient/scene table
-patient_scene_rbind <- dplyr::bind_rows(
-  patient_scene_2021,
-  patient_scene_2022,
-  patient_scene_2023,
-  patient_scene_2024
+## patient tables ---------------------------------------------------------
+# Utilize mirai for asynchronous loading
+# automatically bind rows
+patient_scene_clean <- load_nemsqa_parallel(
+  table = "patient_scene",
+  years = 2021:2025,
+  cores = 13
 )
 
-# set up patient/scene table for manipulations
-patient_scene_clean <- patient_scene_rbind |>
-  clean_names_dates_data()
-
-# final manipulations on the patient/scene table
+### final manipulations on the patient/scene table ----
 # handle multiple issues with location using external data sources with
 # consistent names
+
 patient_scene_table <- patient_scene_clean |>
   dplyr::left_join(
     zipcodes,
@@ -110,33 +101,32 @@ patient_scene_table <- patient_scene_clean |>
     )
   )
 
-### response tables ##############################################################
-response_2021 <- import_nemsqa_data(table = "response", year = 2021)
-response_2022 <- import_nemsqa_data(table = "response", year = 2022)
-response_2023 <- import_nemsqa_data(table = "response", year = 2023)
-response_2024 <- import_nemsqa_data(table = "response", year = 2024)
+### remove patient_scene_clean to preserve memory
+rm(patient_scene_clean)
+gc()
 
-# bind rows for the response table
-response_rbind <- dplyr::bind_rows(
-  response_2021,
-  response_2022,
-  response_2023,
-  response_2024
+# share the patient_scene_table
+patient_scene_table_s <- mori::share(patient_scene_table)
+
+## response tables --------------------------------------------------------
+response_table <- load_nemsqa_parallel(
+  table = "response",
+  years = 2021:2025,
+  cores = 13
 )
 
-# set up response table for manipulations
-response_table <- response_rbind |>
-  clean_names_dates_data()
+# share the response table
+response_table_s <- mori::share(response_table)
 
+# CALCULATIONS ---------------------------------------------------------------
 
-### CALCULATIONS ---------------------------------------------------------------
+## Safety-01 ==================================================================
 
-### Safety-01 ==================================================================
+## safety-01 populations ######################################################
 
-### safety-01 populations ######################################################
+### get safety-01 populations over all years 2021-2025 ---------------------
 
-# over all years 2021-2024
-safety_01_pop <- safety_01_population(
+safety_01_pop <- nemsqar::safety_01_population(
   df = NULL,
   patient_scene_table = patient_scene_table,
   response_table = response_table,
@@ -149,91 +139,62 @@ safety_01_pop <- safety_01_population(
   eresponse_24_col = RESPONSE_ADDITIONAL_RESPONSE_MODE_DESCRIPTORS_E_RESPONSE_24
 )
 
-# population results for 2021-2024
+#### population results for 2021-2025 ----
 safety_01_pop_filter_process <- safety_01_pop$filter_process
 
-# 2021
-safety_01_pop_2021 <- safety_01_population(
-  df = NULL,
-  patient_scene_table = patient_scene_table |>
-    dplyr::filter(INCIDENT_YEAR == 2021),
-  response_table = response_table |> dplyr::filter(INCIDENT_YEAR == 2021),
-  erecord_01_col = FACT_INCIDENT_PK,
-  incident_date_col = INCIDENT_DATE,
-  patient_DOB_col = PATIENT_DATE_OF_BIRTH_E_PATIENT_17,
-  epatient_15_col = PATIENT_AGE_E_PATIENT_15,
-  epatient_16_col = PATIENT_AGE_UNITS_E_PATIENT_16,
-  eresponse_05_col = RESPONSE_TYPE_OF_SERVICE_REQUESTED_WITH_CODE_E_RESPONSE_05,
-  eresponse_24_col = RESPONSE_ADDITIONAL_RESPONSE_MODE_DESCRIPTORS_E_RESPONSE_24
+#### population missingness results for 2021-2025 ----
+safety_01_missings <- safety_01_pop$missingness
+
+# set up daemons
+mirai::daemons(n = 13)
+
+### get safety_01 population data for each year using mirai and mori -------
+
+# track progress
+tictoc::tic(msg = "safety_01_pop_years_init")
+
+safety_01_pop_years_init <- mirai::mirai_map(
+  report_years,
+  \(yr, ps, rsp) {
+    # parallelize by year
+    ps_y <- ps |> dplyr::filter(INCIDENT_YEAR == yr)
+    rsp_y <- rsp |> dplyr::filter(INCIDENT_YEAR == yr)
+
+    # run function in parallel
+    nemsqar::safety_01_population(
+      df = NULL,
+      patient_scene_table = ps_y,
+      response_table = rsp_y,
+      erecord_01_col = FACT_INCIDENT_PK,
+      incident_date_col = INCIDENT_DATE,
+      patient_DOB_col = PATIENT_DATE_OF_BIRTH_E_PATIENT_17,
+      epatient_15_col = PATIENT_AGE_E_PATIENT_15,
+      epatient_16_col = PATIENT_AGE_UNITS_E_PATIENT_16,
+      eresponse_05_col = RESPONSE_TYPE_OF_SERVICE_REQUESTED_WITH_CODE_E_RESPONSE_05,
+      eresponse_24_col = RESPONSE_ADDITIONAL_RESPONSE_MODE_DESCRIPTORS_E_RESPONSE_24
+    )
+  },
+  .args = list(
+    ps = patient_scene_table_s,
+    rsp = response_table_s
+  )
+)[.progress]
+
+# Get total time
+time <- tictoc::toc()
+
+#### append years to the population files ----
+safety_01_pop_years <- add_year_to_nested(
+  x = safety_01_pop_years_init,
+  file = "filter_process",
+  years = 2021:2025
 )
 
-# population results 2021
-safety_01_pop_filter_process_2021 <- safety_01_pop_2021$filter_process |>
-  dplyr::mutate(YEAR = 2021)
-
-# 2022
-safety_01_pop_2022 <- safety_01_population(
-  df = NULL,
-  patient_scene_table = patient_scene_table |>
-    dplyr::filter(INCIDENT_YEAR == 2022),
-  response_table = response_table |> dplyr::filter(INCIDENT_YEAR == 2022),
-  erecord_01_col = FACT_INCIDENT_PK,
-  incident_date_col = INCIDENT_DATE,
-  patient_DOB_col = PATIENT_DATE_OF_BIRTH_E_PATIENT_17,
-  epatient_15_col = PATIENT_AGE_E_PATIENT_15,
-  epatient_16_col = PATIENT_AGE_UNITS_E_PATIENT_16,
-  eresponse_05_col = RESPONSE_TYPE_OF_SERVICE_REQUESTED_WITH_CODE_E_RESPONSE_05,
-  eresponse_24_col = RESPONSE_ADDITIONAL_RESPONSE_MODE_DESCRIPTORS_E_RESPONSE_24
-)
-
-# population results 2022
-safety_01_pop_filter_process_2022 <- safety_01_pop_2022$filter_process |>
-  dplyr::mutate(YEAR = 2022)
-
-# 2023
-safety_01_pop_2023 <- safety_01_population(
-  df = NULL,
-  patient_scene_table = patient_scene_table |>
-    dplyr::filter(INCIDENT_YEAR == 2023),
-  response_table = response_table |> dplyr::filter(INCIDENT_YEAR == 2023),
-  erecord_01_col = FACT_INCIDENT_PK,
-  incident_date_col = INCIDENT_DATE,
-  patient_DOB_col = PATIENT_DATE_OF_BIRTH_E_PATIENT_17,
-  epatient_15_col = PATIENT_AGE_E_PATIENT_15,
-  epatient_16_col = PATIENT_AGE_UNITS_E_PATIENT_16,
-  eresponse_05_col = RESPONSE_TYPE_OF_SERVICE_REQUESTED_WITH_CODE_E_RESPONSE_05,
-  eresponse_24_col = RESPONSE_ADDITIONAL_RESPONSE_MODE_DESCRIPTORS_E_RESPONSE_24
-)
-
-# population results 2023
-safety_01_pop_filter_process_2023 <- safety_01_pop_2023$filter_process |>
-  dplyr::mutate(YEAR = 2023)
-
-# 2024
-safety_01_pop_2024 <- safety_01_population(
-  df = NULL,
-  patient_scene_table = patient_scene_table |>
-    dplyr::filter(INCIDENT_YEAR == 2024),
-  response_table = response_table |> dplyr::filter(INCIDENT_YEAR == 2024),
-  erecord_01_col = FACT_INCIDENT_PK,
-  incident_date_col = INCIDENT_DATE,
-  patient_DOB_col = PATIENT_DATE_OF_BIRTH_E_PATIENT_17,
-  epatient_15_col = PATIENT_AGE_E_PATIENT_15,
-  epatient_16_col = PATIENT_AGE_UNITS_E_PATIENT_16,
-  eresponse_05_col = RESPONSE_TYPE_OF_SERVICE_REQUESTED_WITH_CODE_E_RESPONSE_05,
-  eresponse_24_col = RESPONSE_ADDITIONAL_RESPONSE_MODE_DESCRIPTORS_E_RESPONSE_24
-)
-
-# population results 2024
-safety_01_pop_filter_process_2024 <- safety_01_pop_2024$filter_process |>
-  dplyr::mutate(YEAR = 2024)
-
-# safety-01 populations over the years
-safety_01_pop_years <- dplyr::bind_rows(
-  safety_01_pop_filter_process_2021,
-  safety_01_pop_filter_process_2022,
-  safety_01_pop_filter_process_2023,
-  safety_01_pop_filter_process_2024
+#### append years to the missingness files ----
+safety_01_missingness_years <- add_year_to_nested(
+  x = safety_01_pop_years_init,
+  file = "missingness",
+  years = 2021:2025
 )
 
 # plot population trends over time
@@ -241,50 +202,91 @@ safety_01_pop_years |>
   plot_nemsqa_pops(
     type = "col",
     wrap_width = 25,
-    plot_title = "Safety-01",
-    facets = TRUE,
-    vjust_title = 2,
-    vjust_subtitle = 1.5
+    plot_title = "Safety-01"
   )
-### safety-01 results ##########################################################
 
-# year
-safety_01_result_year <- nemsqar::safety_01(
-  df = NULL,
-  patient_scene_table = patient_scene_table,
-  response_table = response_table,
-  erecord_01_col = FACT_INCIDENT_PK,
-  incident_date_col = INCIDENT_DATE,
-  patient_DOB_col = PATIENT_DATE_OF_BIRTH_E_PATIENT_17,
-  epatient_15_col = PATIENT_AGE_E_PATIENT_15,
-  epatient_16_col = PATIENT_AGE_UNITS_E_PATIENT_16,
-  eresponse_05_col = RESPONSE_TYPE_OF_SERVICE_REQUESTED_WITH_CODE_E_RESPONSE_05,
-  eresponse_24_col = RESPONSE_ADDITIONAL_RESPONSE_MODE_DESCRIPTORS_E_RESPONSE_24,
-  confidence_interval = TRUE,
-  method = "w",
-  conf.level = 0.95,
-  correct = TRUE,
-  .by = INCIDENT_YEAR
-)
+## safety-01 results ##########################################################
 
-# regions and years
-safety_01_result_regions_years <- nemsqar::safety_01(
-  df = NULL,
-  patient_scene_table = patient_scene_table,
-  response_table = response_table,
-  erecord_01_col = FACT_INCIDENT_PK,
-  incident_date_col = INCIDENT_DATE,
-  patient_DOB_col = PATIENT_DATE_OF_BIRTH_E_PATIENT_17,
-  epatient_15_col = PATIENT_AGE_E_PATIENT_15,
-  epatient_16_col = PATIENT_AGE_UNITS_E_PATIENT_16,
-  eresponse_05_col = RESPONSE_TYPE_OF_SERVICE_REQUESTED_WITH_CODE_E_RESPONSE_05,
-  eresponse_24_col = RESPONSE_ADDITIONAL_RESPONSE_MODE_DESCRIPTORS_E_RESPONSE_24,
-  confidence_interval = TRUE,
-  method = "w",
-  conf.level = 0.95,
-  correct = TRUE,
-  .by = c(INCIDENT_YEAR, `Region: Preparedness`)
-) |>
+### results years ----------------------------------------------------------
+
+# benchmark time - start
+tictoc::tic(msg = "safety_01_result_year")
+
+#### year ----
+safety_01_result_year <- mirai::mirai_map(
+  report_years,
+  \(yr, ps, rsp) {
+    # parallelize by year
+    ps_y <- ps |> dplyr::filter(INCIDENT_YEAR == yr)
+    rsp_y <- rsp |> dplyr::filter(INCIDENT_YEAR == yr)
+
+    # run function in parallel
+    nemsqar::safety_01(
+      df = NULL,
+      patient_scene_table = ps_y,
+      response_table = rsp_y,
+      erecord_01_col = FACT_INCIDENT_PK,
+      incident_date_col = INCIDENT_DATE,
+      patient_DOB_col = PATIENT_DATE_OF_BIRTH_E_PATIENT_17,
+      epatient_15_col = PATIENT_AGE_E_PATIENT_15,
+      epatient_16_col = PATIENT_AGE_UNITS_E_PATIENT_16,
+      eresponse_05_col = RESPONSE_TYPE_OF_SERVICE_REQUESTED_WITH_CODE_E_RESPONSE_05,
+      eresponse_24_col = RESPONSE_ADDITIONAL_RESPONSE_MODE_DESCRIPTORS_E_RESPONSE_24,
+      confidence_interval = TRUE,
+      method = "w",
+      conf.level = 0.95,
+      correct = TRUE,
+      .by = INCIDENT_YEAR
+    )
+  },
+  .args = list(
+    ps = patient_scene_table_s,
+    rsp = response_table_s
+  )
+)[.progress] |>
+  dplyr::bind_rows()
+
+# benchmark time diff
+time_result_year <- tictoc::toc()
+
+### results regions and years ----------------------------------------------
+
+# benchmark time - start
+tictoc::tic(msg = "safety_01_result_regions_years")
+
+#### regions and years ----
+safety_01_result_regions_years <- mirai::mirai_map(
+  report_years,
+  \(yr, ps, rsp) {
+    # parallelize by year
+    ps_y <- ps |> dplyr::filter(INCIDENT_YEAR == yr)
+    rsp_y <- rsp |> dplyr::filter(INCIDENT_YEAR == yr)
+
+    # run function in parallel
+    nemsqar::safety_01(
+      df = NULL,
+      patient_scene_table = ps_y,
+      response_table = rsp_y,
+      erecord_01_col = FACT_INCIDENT_PK,
+      incident_date_col = INCIDENT_DATE,
+      patient_DOB_col = PATIENT_DATE_OF_BIRTH_E_PATIENT_17,
+      epatient_15_col = PATIENT_AGE_E_PATIENT_15,
+      epatient_16_col = PATIENT_AGE_UNITS_E_PATIENT_16,
+      eresponse_05_col = RESPONSE_TYPE_OF_SERVICE_REQUESTED_WITH_CODE_E_RESPONSE_05,
+      eresponse_24_col = RESPONSE_ADDITIONAL_RESPONSE_MODE_DESCRIPTORS_E_RESPONSE_24,
+      confidence_interval = TRUE,
+      method = "w",
+      conf.level = 0.95,
+      correct = TRUE,
+      .by = c(INCIDENT_YEAR, `Region: Preparedness`)
+    )
+  },
+  .args = list(
+    ps = patient_scene_table_s,
+    rsp = response_table_s
+  )
+)[.progress] |>
+  dplyr::bind_rows() |>
   dplyr::mutate(
     `Region: Preparedness` = dplyr::if_else(
       is.na(`Region: Preparedness`),
@@ -307,24 +309,52 @@ safety_01_result_regions_years <- nemsqar::safety_01(
     )
   )
 
-# regions
-safety_01_result_regions <- nemsqar::safety_01(
-  df = NULL,
-  patient_scene_table = patient_scene_table,
-  response_table = response_table,
-  erecord_01_col = FACT_INCIDENT_PK,
-  incident_date_col = INCIDENT_DATE,
-  patient_DOB_col = PATIENT_DATE_OF_BIRTH_E_PATIENT_17,
-  epatient_15_col = PATIENT_AGE_E_PATIENT_15,
-  epatient_16_col = PATIENT_AGE_UNITS_E_PATIENT_16,
-  eresponse_05_col = RESPONSE_TYPE_OF_SERVICE_REQUESTED_WITH_CODE_E_RESPONSE_05,
-  eresponse_24_col = RESPONSE_ADDITIONAL_RESPONSE_MODE_DESCRIPTORS_E_RESPONSE_24,
-  confidence_interval = TRUE,
-  method = "w",
-  conf.level = 0.95,
-  correct = TRUE,
-  .by = `Region: Preparedness`
-) |>
+# benchmark time diff
+time_result_regions_year <- tictoc::toc()
+
+# unburden daemons
+mirai::daemons(n = 0)
+
+### results regions --------------------------------------------------------
+
+# set daemons
+mirai::daemons(n = 13)
+
+# get start time
+tictoc::tic(msg = "safety_01_result_regions")
+
+#### regions ----
+safety_01_result_regions <- mirai::mirai_map(
+  report_regions,
+  \(reg, ps, rsp) {
+    # parallelize by year
+    ps_r <- ps |> dplyr::filter(`Region: Preparedness` == reg)
+
+    # run function in parallel
+    nemsqar::safety_01(
+      df = NULL,
+      patient_scene_table = ps_r,
+      response_table = rsp,
+      erecord_01_col = FACT_INCIDENT_PK,
+      incident_date_col = INCIDENT_DATE,
+      patient_DOB_col = PATIENT_DATE_OF_BIRTH_E_PATIENT_17,
+      epatient_15_col = PATIENT_AGE_E_PATIENT_15,
+      epatient_16_col = PATIENT_AGE_UNITS_E_PATIENT_16,
+      eresponse_05_col = RESPONSE_TYPE_OF_SERVICE_REQUESTED_WITH_CODE_E_RESPONSE_05,
+      eresponse_24_col = RESPONSE_ADDITIONAL_RESPONSE_MODE_DESCRIPTORS_E_RESPONSE_24,
+      confidence_interval = TRUE,
+      method = "w",
+      conf.level = 0.95,
+      correct = TRUE,
+      .by = `Region: Preparedness`
+    )
+  },
+  .args = list(
+    ps = patient_scene_table_s,
+    rsp = response_table_s
+  )
+)[.progress] |>
+  dplyr::bind_rows() |>
   dplyr::mutate(
     `Region: Preparedness` = dplyr::if_else(
       is.na(`Region: Preparedness`),
@@ -346,15 +376,18 @@ safety_01_result_regions <- nemsqar::safety_01(
     )
   )
 
-# counties
+# get total time
+time_result_regions <- tictoc::toc()
+
+# unburden daemons
+mirai::daemons(n = 0)
+
+### results counties -------------------------------------------------------
+
+#### counties ----
 safety_01_result_counties <- nemsqar::safety_01(
   df = NULL,
-  patient_scene_table = patient_scene_table |>
-    dplyr::mutate(
-      SCENE_INCIDENT_COUNTY_NAME_E_SCENE_21 = factor(
-        SCENE_INCIDENT_COUNTY_NAME_E_SCENE_21
-      )
-    ),
+  patient_scene_table = patient_scene_table,
   response_table = response_table,
   erecord_01_col = FACT_INCIDENT_PK,
   incident_date_col = INCIDENT_DATE,
@@ -383,7 +416,71 @@ safety_01_result_counties <- nemsqar::safety_01(
     )
   )
 
-# overall
+### results counties and years ---------------------------------------------
+
+# set daemons
+mirai::daemons(n = 13)
+
+# get start time
+tictoc::tic(msg = "safety_01_result_counties_years")
+
+#### counties and years ----
+safety_01_result_counties_years <- mirai::mirai_map(
+  report_years,
+  \(yr, ps, rsp) {
+    # parallelize by year
+    ps_y <- ps |> dplyr::filter(INCIDENT_YEAR == yr)
+    rsp_y <- rsp |> dplyr::filter(INCIDENT_YEAR == yr)
+
+    # run function in parallel
+    nemsqar::safety_01(
+      df = NULL,
+      patient_scene_table = ps_y,
+      response_table = rsp_y,
+      erecord_01_col = FACT_INCIDENT_PK,
+      incident_date_col = INCIDENT_DATE,
+      patient_DOB_col = PATIENT_DATE_OF_BIRTH_E_PATIENT_17,
+      epatient_15_col = PATIENT_AGE_E_PATIENT_15,
+      epatient_16_col = PATIENT_AGE_UNITS_E_PATIENT_16,
+      eresponse_05_col = RESPONSE_TYPE_OF_SERVICE_REQUESTED_WITH_CODE_E_RESPONSE_05,
+      eresponse_24_col = RESPONSE_ADDITIONAL_RESPONSE_MODE_DESCRIPTORS_E_RESPONSE_24,
+      confidence_interval = TRUE,
+      method = "w",
+      conf.level = 0.95,
+      correct = TRUE,
+      .by = c(INCIDENT_YEAR, SCENE_INCIDENT_COUNTY_NAME_E_SCENE_21)
+    )
+  },
+  .args = list(
+    ps = patient_scene_table_s,
+    rsp = response_table_s
+  )
+)[.progress] |>
+  dplyr::bind_rows() |>
+  tidyr::complete(
+    INCIDENT_YEAR,
+    SCENE_INCIDENT_COUNTY_NAME_E_SCENE_21,
+    measure,
+    pop,
+    fill = list(
+      numerator = 0,
+      denominator = 0,
+      prop = NA_real_,
+      prop_label = NA_character_,
+      lower_ci = NA_real_,
+      upper_ci = NA_real_
+    )
+  )
+
+# get total time
+time_result_counties_years <- tictoc::toc()
+
+# unburden daemons
+mirai::daemons(n = 0)
+
+### results overall --------------------------------------------------------
+
+#### overall ----
 safety_01_result_overall <- nemsqar::safety_01(
   df = NULL,
   patient_scene_table = patient_scene_table,
@@ -401,7 +498,15 @@ safety_01_result_overall <- nemsqar::safety_01(
   correct = TRUE
 )
 
-# services
+### results services  ------------------------------------------------------
+
+# set daemons
+mirai::daemons(n = 13)
+
+# get start time
+tictoc::tic(msg = "safety_01_result_services")
+
+#### services ----
 safety_01_result_services <- nemsqar::safety_01(
   df = NULL,
   patient_scene_table = patient_scene_table,
@@ -434,9 +539,15 @@ safety_01_result_services <- nemsqar::safety_01(
     )
   )
 
-### EXPORT =====================================================================
+# get total time
+time_result_services <- tictoc::toc()
 
-### population exports #########################################################
+# unburden daemons
+mirai::daemons(n = 0)
+
+# EXPORT =====================================================================
+
+## population exports #########################################################
 
 export_nemsqa_data(
   pattern = "safety_01_pop",
@@ -444,10 +555,18 @@ export_nemsqa_data(
   folder = "population"
 )
 
-### results exports ############################################################
+## results exports ############################################################
 
 export_nemsqa_data(
   pattern = "safety_01_result",
   measure = "Safety-01",
   folder = "result"
+)
+
+## missingness exports ########################################################
+
+export_nemsqa_data(
+  pattern = "safety_01_(?:missings|missingness)",
+  measure = "Safety-01",
+  folder = "missings"
 )

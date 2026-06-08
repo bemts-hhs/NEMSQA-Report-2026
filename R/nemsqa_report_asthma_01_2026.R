@@ -143,9 +143,9 @@ situation_table_s <- mori::share(situation_table)
 
 ## Asthma-01 ==================================================================
 
-# asthma-01 populations ########################################################
+## asthma-01 populations ########################################################
 
-## population over all years 2021-2025 ------------------------------------
+### population over all years 2021-2025 ------------------------------------
 
 asthma_01_pop <- nemsqar::asthma_01_population(
   df = NULL,
@@ -164,16 +164,16 @@ asthma_01_pop <- nemsqar::asthma_01_population(
   emedications_03_col = MEDICATION_GIVEN_OR_ADMINISTERED_DESCRIPTION_AND_RXCUI_CODE_E_MEDICATIONS_03
 )
 
-### population results for 2021-2025 ----
+#### population results for 2021-2025 ----
 asthma_01_pop_filter_process <- asthma_01_pop$filter_process
 
-### population missingness results for 2021-2025 ----
+#### population missingness results for 2021-2025 ----
 asthma_01_missings <- asthma_01_pop$missingness
 
 # set up daemons
 mirai::daemons(n = 13)
 
-## get asthma_01 population data for each year using mirai and mori --------
+### get asthma_01 population data for each year using mirai and mori --------
 
 # track progress
 tictoc::tic(msg = "asthma_01_pop_years_init")
@@ -216,21 +216,21 @@ asthma_01_pop_years_init <- mirai::mirai_map(
 # Get total time
 time <- tictoc::toc()
 
-### append years to the population files ----
+#### append years to the population files ----
 asthma_01_pop_years <- add_year_to_nested(
   x = asthma_01_pop_years_init,
   file = "filter_process",
   years = 2021:2025
 )
 
-### append years to the missingness files ----
+#### append years to the missingness files ----
 asthma_01_missingness_years <- add_year_to_nested(
   x = asthma_01_pop_years_init,
   file = "missingness",
   years = 2021:2025
 )
 
-### plot population trends over time ----
+#### plot population trends over time ----
 asthma_01_pop_years |>
   plot_nemsqa_pops(
     type = "col",
@@ -238,9 +238,9 @@ asthma_01_pop_years |>
     plot_title = "Asthma-01"
   )
 
-# asthma-01 results ##########################################################
+### asthma-01 results ##########################################################
 
-## results years ----------------------------------------------------------
+#### results years ----------------------------------------------------------
 
 # get start time
 tictoc::tic(msg = "asthma_01_result_year")
@@ -290,12 +290,12 @@ asthma_01_result_year <- mirai::mirai_map(
 # total time
 time_result_year <- tictoc::toc()
 
-## results regions and years ----------------------------------------------
+### results regions and years ----------------------------------------------
 
 # get start time
 tictoc::tic(msg = "asthma_01_result_regions_year")
 
-### regions and years ----
+#### regions and years ----
 asthma_01_result_regions_years <- mirai::mirai_map(
   report_years,
   \(yr, ps, rsp, sit, med) {
@@ -361,12 +361,12 @@ asthma_01_result_regions_years <- mirai::mirai_map(
 # total time
 time_result_regions_year <- tictoc::toc()
 
-## results regions --------------------------------------------------------
+### results regions --------------------------------------------------------
 
 # get start time
 tictoc::tic(msg = "asthma_01_result_regions")
 
-### regions ----
+#### regions ----
 asthma_01_result_regions <- mirai::mirai_map(
   report_regions,
   \(reg, ps, rsp, sit, med) {
@@ -429,9 +429,9 @@ asthma_01_result_regions <- mirai::mirai_map(
 # total time
 time_result_regions <- tictoc::toc()
 
-## results counties -------------------------------------------------------
+### results counties -------------------------------------------------------
 
-### counties ----
+#### counties ----
 asthma_01_result_counties <- nemsqar::asthma_01(
   df = NULL,
   patient_scene_table = patient_scene_table,
@@ -467,12 +467,12 @@ asthma_01_result_counties <- nemsqar::asthma_01(
     )
   )
 
-## results counties years -------------------------------------------------
+### results counties years -------------------------------------------------
 
 # start time counties / years
 tictoc::tic(msg = "asthma_01_result_counties_years")
 
-### counties years ----
+#### counties years ----
 asthma_01_result_counties_years <- mirai::mirai_map(
   report_years,
   \(yr, ps, rsp, sit, med) {
@@ -531,9 +531,9 @@ asthma_01_result_counties_years <- mirai::mirai_map(
 # total time
 time_result_counties_years <- tictoc::toc()
 
-## results overall --------------------------------------------------------
+### results overall --------------------------------------------------------
 
-### overall ----
+#### overall ----
 asthma_01_result_overall <- nemsqar::asthma_01(
   df = NULL,
   patient_scene_table = patient_scene_table,
@@ -556,12 +556,12 @@ asthma_01_result_overall <- nemsqar::asthma_01(
 )
 
 
-## results services -------------------------------------------------------
+### results services -------------------------------------------------------
 
 # get start time
 tictoc::tic(msg = "asthma_01_result_services")
 
-### services ----
+#### services ----
 asthma_01_result_services <- mirai::mirai_map(
   report_years,
   \(yr, ps, rsp, sit, med) {

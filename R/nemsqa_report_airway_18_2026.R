@@ -154,9 +154,9 @@ vitals_table_s <- mori::share(vitals_table)
 
 ## Airway-18 ==================================================================
 
-# airway-18 populations ######################################################
+## airway-18 populations ######################################################
 
-## populations over all years 2021-2025 -----------------------------------
+### populations over all years 2021-2025 -----------------------------------
 
 airway_18_pop <- nemsqar::airway_18_population(
   df = NULL,
@@ -181,18 +181,18 @@ airway_18_pop <- nemsqar::airway_18_population(
   evitals_16_col = VITALS_CARBON_DIOXIDE_CO2_E_VITALS_16
 )
 
-### population results for 2021-2025 ----
+#### population results for 2021-2025 ----
 airway_18_pop_filter_process <- airway_18_pop$filter_process
 
-### missingness results for 2021-2025 ----
+#### missingness results for 2021-2025 ----
 airway_18_missings <- airway_18_pop$missingness
 
 # set up daemons
 mirai::daemons(n = 13)
 
-## get airway_18_population data for each year -------
+### get airway_18_population data for each year -------
 
-### 2021 ----
+#### 2021 ----
 airway_18_pop_2021 <- nemsqar::airway_18_population(
   df = NULL,
   patient_scene_table = patient_scene_table |>
@@ -217,15 +217,15 @@ airway_18_pop_2021 <- nemsqar::airway_18_population(
   evitals_16_col = VITALS_CARBON_DIOXIDE_CO2_E_VITALS_16
 )
 
-### population results 2021 ----
+#### population results 2021 ----
 airway_18_pop_filter_process_2021 <- airway_18_pop_2021$filter_process |>
   dplyr::mutate(YEAR = 2021)
 
-### missingness results 2021 ----
+#### missingness results 2021 ----
 airway_18_pop_missingness_2021 <- airway_18_pop_2021$missingness |>
   dplyr::mutate(YEAR = 2021)
 
-## 2022 ----
+### 2022 ----
 airway_18_pop_2022 <- nemsqar::airway_18_population(
   df = NULL,
   patient_scene_table = patient_scene_table |>
@@ -250,15 +250,15 @@ airway_18_pop_2022 <- nemsqar::airway_18_population(
   evitals_16_col = VITALS_CARBON_DIOXIDE_CO2_E_VITALS_16
 )
 
-### population results 2022 ----
+#### population results 2022 ----
 airway_18_pop_filter_process_2022 <- airway_18_pop_2022$filter_process |>
   dplyr::mutate(YEAR = 2022)
 
-### missingness results 2022 ----
+#### missingness results 2022 ----
 airway_18_pop_missingness_2022 <- airway_18_pop_2022$missingness |>
   dplyr::mutate(YEAR = 2022)
 
-## 2023 ----
+### 2023 ----
 airway_18_pop_2023 <- nemsqar::airway_18_population(
   df = NULL,
   patient_scene_table = patient_scene_table |>
@@ -283,15 +283,15 @@ airway_18_pop_2023 <- nemsqar::airway_18_population(
   evitals_16_col = VITALS_CARBON_DIOXIDE_CO2_E_VITALS_16
 )
 
-### population results 2023 ----
+#### population results 2023 ----
 airway_18_pop_filter_process_2023 <- airway_18_pop_2023$filter_process |>
   dplyr::mutate(YEAR = 2023)
 
-### missingness results 2023 ----
+#### missingness results 2023 ----
 airway_18_pop_missingness_2023 <- airway_18_pop_2023$missingness |>
   dplyr::mutate(YEAR = 2023)
 
-## 2024 ----
+### 2024 ----
 airway_18_pop_2024 <- nemsqar::airway_18_population(
   df = NULL,
   patient_scene_table = patient_scene_table |>
@@ -316,15 +316,15 @@ airway_18_pop_2024 <- nemsqar::airway_18_population(
   evitals_16_col = VITALS_CARBON_DIOXIDE_CO2_E_VITALS_16
 )
 
-### population results 2024 ----
+#### population results 2024 ----
 airway_18_pop_filter_process_2024 <- airway_18_pop_2024$filter_process |>
   dplyr::mutate(YEAR = 2024)
 
-### missingness results 2024 ----
+#### missingness results 2024 ----
 airway_18_pop_missingness_2024 <- airway_18_pop_2024$missingness |>
   dplyr::mutate(YEAR = 2024)
 
-## 2025 ----
+### 2025 ----
 airway_18_pop_2025 <- nemsqar::airway_18_population(
   df = NULL,
   patient_scene_table = patient_scene_table |>
@@ -349,15 +349,15 @@ airway_18_pop_2025 <- nemsqar::airway_18_population(
   evitals_16_col = VITALS_CARBON_DIOXIDE_CO2_E_VITALS_16
 )
 
-### population results 2025 ----
+#### population results 2025 ----
 airway_18_pop_filter_process_2025 <- airway_18_pop_2025$filter_process |>
   dplyr::mutate(YEAR = 2025)
 
-### missingness results 2025 ----
+#### missingness results 2025 ----
 airway_18_pop_missingness_2025 <- airway_18_pop_2025$missingness |>
   dplyr::mutate(YEAR = 2025)
 
-### airway-18 populations over the years ----
+#### airway-18 populations over the years ----
 airway_18_pop_years <- dplyr::bind_rows(
   airway_18_pop_filter_process_2021,
   airway_18_pop_filter_process_2022,
@@ -366,7 +366,7 @@ airway_18_pop_years <- dplyr::bind_rows(
   airway_18_pop_filter_process_2025
 )
 
-### airway-18 populations over the years ----
+#### airway-18 populations over the years ----
 airway_18_missingness_years <- dplyr::bind_rows(
   airway_18_pop_missingness_2021,
   airway_18_pop_missingness_2022,
@@ -375,7 +375,7 @@ airway_18_missingness_years <- dplyr::bind_rows(
   airway_18_pop_missingness_2025
 )
 
-### plot population trends over time ----
+#### plot population trends over time ----
 airway_18_pop_years |>
   plot_nemsqa_pops(
     type = "col",
@@ -383,11 +383,11 @@ airway_18_pop_years |>
     plot_title = "Airway-18"
   )
 
-# airway-18 results ##########################################################
+## airway-18 results ##########################################################
 
-## results years ----------------------------------------------------------
+### results years ----------------------------------------------------------
 
-### year ----
+#### year ----
 airway_18_result_year <- nemsqar::airway_18(
   df = NULL,
   patient_scene_table = patient_scene_table,
@@ -417,9 +417,9 @@ airway_18_result_year <- nemsqar::airway_18(
 )
 
 
-## results regions and years ----------------------------------------------
+### results regions and years ----------------------------------------------
 
-### regions and years ----
+#### regions and years ----
 airway_18_result_regions_years <- nemsqar::airway_18(
   df = NULL,
   patient_scene_table = patient_scene_table,
@@ -470,9 +470,9 @@ airway_18_result_regions_years <- nemsqar::airway_18(
   )
 
 
-## results regions --------------------------------------------------------
+### results regions --------------------------------------------------------
 
-### regions ----
+#### regions ----
 airway_18_result_regions <- nemsqar::airway_18(
   df = NULL,
   patient_scene_table = patient_scene_table,
@@ -522,9 +522,9 @@ airway_18_result_regions <- nemsqar::airway_18(
   )
 
 
-## results counties -------------------------------------------------------
+### results counties -------------------------------------------------------
 
-### counties ----
+#### counties ----
 airway_18_result_counties <- nemsqar::airway_18(
   df = NULL,
   patient_scene_table = patient_scene_table,
@@ -567,9 +567,9 @@ airway_18_result_counties <- nemsqar::airway_18(
   )
 
 
-## results counties years -------------------------------------------------
+### results counties years -------------------------------------------------
 
-### counties ----
+#### counties ----
 airway_18_result_counties_years <- nemsqar::airway_18(
   df = NULL,
   patient_scene_table = patient_scene_table,
@@ -613,9 +613,9 @@ airway_18_result_counties_years <- nemsqar::airway_18(
   )
 
 
-## results overall --------------------------------------------------------
+### results overall --------------------------------------------------------
 
-### overall ----
+#### overall ----
 airway_18_result_overall <- nemsqar::airway_18(
   df = NULL,
   patient_scene_table = patient_scene_table,
@@ -643,9 +643,9 @@ airway_18_result_overall <- nemsqar::airway_18(
   correct = TRUE
 )
 
-## results services -------------------------------------------------------
+### results services -------------------------------------------------------
 
-### services ----
+#### services ----
 airway_18_result_services <- nemsqar::airway_18(
   df = NULL,
   patient_scene_table = patient_scene_table,

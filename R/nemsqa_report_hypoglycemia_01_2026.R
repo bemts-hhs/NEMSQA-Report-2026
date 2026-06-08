@@ -163,9 +163,9 @@ vitals_table_s <- mori::share(vitals_table)
 
 ## Hypoglycemia-01 ============================================================
 
-# hypoglycemia-01 populations ########################################################
+## hypoglycemia-01 populations ########################################################
 
-## populations over all years 2021-2025 -----------------------------------
+### populations over all years 2021-2025 -----------------------------------
 
 hypoglycemia_01_pop <- nemsqar::hypoglycemia_01_population(
   df = NULL,
@@ -190,16 +190,16 @@ hypoglycemia_01_pop <- nemsqar::hypoglycemia_01_population(
   eprocedures_03_col = PROCEDURE_PERFORMED_DESCRIPTION_AND_CODE_E_PROCEDURES_03
 )
 
-# population results for 2021-2025
+#### population results for 2021-2025 ----
 hypoglycemia_01_pop_filter_process <- hypoglycemia_01_pop$filter_process
 
-# population missingness results for 2021-2025
+#### population missingness results for 2021-2025 ----
 hypoglycemia_01_missings <- hypoglycemia_01_pop$missingness
 
 # set up daemons
 mirai::daemons(n = 13)
 
-## get hypoglycemia-01 population data for each year using mirai and mori ----
+### get hypoglycemia-01 population data for each year using mirai and mori ----
 
 # track progress
 tictoc::tic(msg = "hypoglycemia_01_pop_years_init")
@@ -252,21 +252,21 @@ hypoglycemia_01_pop_years_init <- mirai::mirai_map(
 # Get total time
 time <- tictoc::toc()
 
-### append years to the population files ----
+#### append years to the population files ----
 hypoglycemia_01_pop_years <- add_year_to_nested(
   x = hypoglycemia_01_pop_years_init,
   file = "filter_process",
   years = 2021:2025
 )
 
-### append years to the missingness files ----
+#### append years to the missingness files ----
 hypoglycemia_01_missingness_years <- add_year_to_nested(
   x = hypoglycemia_01_pop_years_init,
   file = "missingness",
   years = 2021:2025
 )
 
-### plot population trends over time ----
+#### plot population trends over time ----
 hypoglycemia_01_pop_years |>
   plot_nemsqa_pops(
     type = "col",
@@ -274,14 +274,14 @@ hypoglycemia_01_pop_years |>
     plot_title = "Hypoglycemia-01"
   )
 
-# hypoglycemia-01 results ####################################################
+## hypoglycemia-01 results ####################################################
 
-## results years ----------------------------------------------------------
+### results years ----------------------------------------------------------
 
 # get start time
 tictoc::tic(msg = "hypoglycemia_01_result_year")
 
-### year ----
+#### year ----
 hypoglycemia_01_result_year <- mirai::mirai_map(
   report_years,
   \(yr, ps, rsp, sit, med, vit, pro) {
@@ -336,12 +336,12 @@ hypoglycemia_01_result_year <- mirai::mirai_map(
 # total time
 time_result_year <- tictoc::toc()
 
-## results regions and years ----------------------------------------------
+### results regions and years ----------------------------------------------
 
 # get start time
 tictoc::tic(msg = "hypoglycemia_01_result_regions_year")
 
-### regions and years ----
+#### regions and years ----
 hypoglycemia_01_result_regions_years <- mirai::mirai_map(
   report_years,
   \(yr, ps, rsp, sit, med, vit, pro) {
@@ -417,12 +417,12 @@ hypoglycemia_01_result_regions_years <- mirai::mirai_map(
 # total time
 time_result_regions_year <- tictoc::toc()
 
-## results regions --------------------------------------------------------
+### results regions --------------------------------------------------------
 
 # get start time
 tictoc::tic(msg = "hypoglycemia_01_result_regions")
 
-### regions ----
+#### regions ----
 hypoglycemia_01_result_regions <- mirai::mirai_map(
   report_regions,
   \(reg, ps, rsp, sit, med, vit, pro) {
@@ -492,9 +492,9 @@ hypoglycemia_01_result_regions <- mirai::mirai_map(
 # total time
 time_result_regions <- tictoc::toc()
 
-## results counties -------------------------------------------------------
+### results counties -------------------------------------------------------
 
-### counties ----
+#### counties ----
 hypoglycemia_01_result_counties <- nemsqar::hypoglycemia_01(
   df = NULL,
   patient_scene_table = patient_scene_table,
@@ -536,12 +536,12 @@ hypoglycemia_01_result_counties <- nemsqar::hypoglycemia_01(
     )
   )
 
-## results counties years -------------------------------------------------
+### results counties years -------------------------------------------------
 
 # start time counties / years
 tictoc::tic(msg = "hypoglycemia_01_result_counties_years")
 
-### counties years ----
+#### counties years ----
 hypoglycemia_01_result_counties_years <- mirai::mirai_map(
   report_years,
   \(yr, ps, rsp, sit, med, vit, pro) {
@@ -610,9 +610,9 @@ hypoglycemia_01_result_counties_years <- mirai::mirai_map(
 # total time
 time_result_counties_years <- tictoc::toc()
 
-## results overall --------------------------------------------------------
+### results overall --------------------------------------------------------
 
-### overall ----
+#### overall ----
 hypoglycemia_01_result_overall <- nemsqar::hypoglycemia_01(
   df = NULL,
   patient_scene_table = patient_scene_table,
@@ -640,12 +640,12 @@ hypoglycemia_01_result_overall <- nemsqar::hypoglycemia_01(
   correct = TRUE
 )
 
-## results services -------------------------------------------------------
+### results services -------------------------------------------------------
 
 # get start time
 tictoc::tic(msg = "hypoglycemia_01_result_services")
 
-### services ----
+#### services ----
 hypoglycemia_01_result_services <- mirai::mirai_map(
   report_years,
   \(yr, ps, rsp, sit, med, vit, pro) {

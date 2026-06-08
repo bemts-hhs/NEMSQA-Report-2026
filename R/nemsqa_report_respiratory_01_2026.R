@@ -143,9 +143,9 @@ vitals_table_s <- mori::share(vitals_table)
 
 ## Respiratory-01 =============================================================
 
-# respiratory-01 populations #################################################
+## respiratory-01 populations #################################################
 
-## populations over all years 2021-2025 -----------------------------------
+### populations over all years 2021-2025 -----------------------------------
 
 respiratory_01_pop <- nemsqar::respiratory_01_population(
   df = NULL,
@@ -165,16 +165,16 @@ respiratory_01_pop <- nemsqar::respiratory_01_population(
   evitals_14_col = VITALS_RESPIRATORY_RATE_E_VITALS_14
 )
 
-## population results for 2021-2025 ----
+#### population results for 2021-2025 ----
 respiratory_01_pop_filter_process <- respiratory_01_pop$filter_process
 
-### missingness results for 2021-2025 ----
+#### missingness results for 2021-2025 ----
 respiratory_01_missings <- respiratory_01_pop$missingness
 
 # set up daemons
 mirai::daemons(n = 13)
 
-## get respiratory_01 population data for each year using mirai and mori ----
+### get respiratory_01 population data for each year using mirai and mori ----
 
 # track progress
 tictoc::tic(msg = "respiratory_01_pop_years_init")
@@ -212,21 +212,21 @@ respiratory_01_pop_years_init <- mirai::mirai_map(
 # Get total time
 time <- tictoc::toc()
 
-### append years to the population files ----
+#### append years to the population files ----
 respiratory_01_pop_years <- add_year_to_nested(
   x = respiratory_01_pop_years_init,
   file = "filter_process",
   years = 2021:2025
 )
 
-### append years to the missingness files ----
+#### append years to the missingness files ----
 respiratory_01_missingness_years <- add_year_to_nested(
   x = respiratory_01_pop_years_init,
   file = "missingness",
   years = 2021:2025
 )
 
-### plot population trends over time ----
+#### plot population trends over time ----
 respiratory_01_pop_years |>
   plot_nemsqa_pops(
     type = "col",
@@ -234,14 +234,14 @@ respiratory_01_pop_years |>
     plot_title = "Respiratory-01"
   )
 
-# respiratory-01 results #####################################################
+## respiratory-01 results #####################################################
 
-## results years ----------------------------------------------------------
+### results years ----------------------------------------------------------
 
 # benchmark time - start
 tictoc::tic(msg = "respiratory_01_result_year")
 
-### year ----
+#### year ----
 respiratory_01_result_year <- mirai::mirai_map(
   report_years,
   \(yr, ps, rsp, sit, vit) {
@@ -287,12 +287,12 @@ respiratory_01_result_year <- mirai::mirai_map(
 # benchmark time diff
 time_result_year <- tictoc::toc()
 
-## results regions and years ----------------------------------------------
+### results regions and years ----------------------------------------------
 
 # benchmark time - start
 tictoc::tic(msg = "respiratory_01_result_regions_years")
 
-### regions and years ----
+#### regions and years ----
 respiratory_01_result_regions_years <- mirai::mirai_map(
   report_years,
   \(yr, ps, rsp, sit, vit) {
@@ -359,12 +359,12 @@ respiratory_01_result_regions_years <- mirai::mirai_map(
 # benchmark time diff
 time_result_regions_year <- tictoc::toc()
 
-## results regions --------------------------------------------------------
+### results regions --------------------------------------------------------
 
 # get start time
 tictoc::tic(msg = "respiratory_01_result_regions")
 
-### regions ----
+#### regions ----
 respiratory_01_result_regions <- mirai::mirai_map(
   report_regions,
   \(reg, ps, rsp, sit, vit) {
@@ -427,9 +427,9 @@ respiratory_01_result_regions <- mirai::mirai_map(
 # get total time
 time_result_regions <- tictoc::toc()
 
-## results counties -------------------------------------------------------
+### results counties -------------------------------------------------------
 
-### counties ----
+#### counties ----
 respiratory_01_result_counties <- nemsqar::respiratory_01(
   df = NULL,
   patient_scene_table = patient_scene_table,
@@ -467,12 +467,12 @@ respiratory_01_result_counties <- nemsqar::respiratory_01(
   )
 
 
-## results counties and years ---------------------------------------------
+### results counties and years ---------------------------------------------
 
 # get start time
 tictoc::tic(msg = "respiratory_01_result_counties_years")
 
-### counties and years ----
+#### counties and years ----
 respiratory_01_result_counties_years <- mirai::mirai_map(
   report_years,
   \(yr, ps, rsp, sit, vit) {
@@ -532,9 +532,9 @@ respiratory_01_result_counties_years <- mirai::mirai_map(
 # get total time
 time_result_counties_years <- tictoc::toc()
 
-## results overall --------------------------------------------------------
+### results overall --------------------------------------------------------
 
-### overall ----
+#### overall ----
 respiratory_01_result_overall <- nemsqar::respiratory_01(
   df = NULL,
   patient_scene_table = patient_scene_table,
@@ -558,12 +558,12 @@ respiratory_01_result_overall <- nemsqar::respiratory_01(
 )
 
 
-## results services  ------------------------------------------------------
+### results services  ------------------------------------------------------
 
 # get start time
 tictoc::tic(msg = "respiratory_01_result_services")
 
-### services ----
+#### services ----
 respiratory_01_result_services <- mirai::mirai_map(
   report_years,
   \(yr, ps, rsp, sit, vit) {

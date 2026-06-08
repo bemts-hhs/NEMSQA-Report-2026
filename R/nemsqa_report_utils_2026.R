@@ -1525,7 +1525,7 @@ plot_nemsqa_pops <- function(
         y = count + nudge_var,
         label = traumar::pretty_number(count, digits = 2)
       ),
-      size = 2,
+      size = 4,
       color = "darkslategray",
       fontface = "bold",
       family = "sans"
