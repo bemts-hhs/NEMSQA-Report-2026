@@ -1,10 +1,10 @@
-### IOWA NEMSQA REPORT SAFETY-04 2025 ------------------------------------
+### IOWA NEMSQA REPORT SAFETY-04 2026 ------------------------------------
 
 ###_____________________________________________________________________________
 # this script will contain all reporting calculations for Safety-04
-# use nemsqa_report_prep_2025.R to get critical functions into memory
+# use nemsqa_report_prep_2026.R to get critical functions into memory
 ###_____________________________________________________________________________
-# assume that nemsqa_report_prep_2025.R was already ran to load needed packages
+# assume that nemsqa_report_prep_2026.R was already ran to load needed packages
 # and project-specific custom functions in the project
 ###_____________________________________________________________________________
 # For any section that includes parallel processing, the intent is to run the
@@ -14,92 +14,59 @@
 # should be used at all for certain NEMSQA measure analyses.
 ###___________________________________________________________________________
 
-### DATA -----------------------------------------------------------------------
+# DATA -----------------------------------------------------------------------
 
 # tables imported in alphabetical order
 # tables do not need to be loaded again if already in memory
 
-### arrest tables ################################################################
-arrest_2021 <- import_nemsqa_data(table = "arrest", year = 2021)
-arrest_2022 <- import_nemsqa_data(table = "arrest", year = 2022)
-arrest_2023 <- import_nemsqa_data(table = "arrest", year = 2023)
-arrest_2024 <- import_nemsqa_data(table = "arrest", year = 2024)
-
-# bind rows for the arrest table
-arrest_rbind <- dplyr::bind_rows(
-  arrest_2021,
-  arrest_2022,
-  arrest_2023,
-  arrest_2024
+## arrest tables ----------------------------------------------------------
+# Utilize mirai for asynchronous loading
+# automatically bind rows
+arrest_table <- load_nemsqa_parallel(
+  table = "arrest",
+  years = 2021:2025,
+  cores = 13
 )
 
-# set up arrest table for manipulations
-arrest_table <- arrest_rbind |>
-  clean_names_dates_data()
+# share the arrest table
+arrest_table_s <- mori::share(arrest_table)
 
 
-# tables imported in alphabetical order
-
-### disposition tables ###########################################################
-disposition_2021 <- import_nemsqa_data(table = "disposition", year = 2021)
-disposition_2022 <- import_nemsqa_data(table = "disposition", year = 2022)
-disposition_2023 <- import_nemsqa_data(table = "disposition", year = 2023)
-disposition_2024 <- import_nemsqa_data(table = "disposition", year = 2024)
-
-# bind rows for the disposition table
-disposition_rbind <- dplyr::bind_rows(
-  disposition_2021,
-  disposition_2022,
-  disposition_2023,
-  disposition_2024
+## disposition tables -----------------------------------------------------
+disposition_table <- load_nemsqa_parallel(
+  table = "disposition",
+  years = 2021:2025,
+  cores = 13,
+  exclude = "DISPOSITION_DESTINATION_US_NATIONAL_GRID_COORDINATES_E_DISPOSITION_10"
 )
 
-# set up the disposition table for manipulations
-disposition_table <- disposition_rbind |>
-  clean_names_dates_data()
+# share the disposition table
+disposition_table_s <- mori::share(disposition_table)
 
-
-### injury tables ################################################################
-injury_2021 <- import_nemsqa_data(table = "injury", year = 2021)
-injury_2022 <- import_nemsqa_data(table = "injury", year = 2022)
-injury_2023 <- import_nemsqa_data(table = "injury", year = 2023)
-injury_2024 <- import_nemsqa_data(table = "injury", year = 2024)
-
-# bind rows for the injury table
-injury_rbind <- dplyr::bind_rows(
-  injury_2021,
-  injury_2022,
-  injury_2023,
-  injury_2024
-)
-
+## injury tables ----------------------------------------------------------
 # set up the injury table for manipulations
-injury_table <- injury_rbind |>
-  clean_names_dates_data()
-
-
-### patient/scene tables #########################################################
-# given that patient and scene data are 1-1 relationship, join those tables
-patient_scene_2021 <- import_nemsqa_data(table = "patient_scene", year = 2021)
-patient_scene_2022 <- import_nemsqa_data(table = "patient_scene", year = 2022)
-patient_scene_2023 <- import_nemsqa_data(table = "patient_scene", year = 2023)
-patient_scene_2024 <- import_nemsqa_data(table = "patient_scene", year = 2024)
-
-# bind rows for the patient/scene table
-patient_scene_rbind <- dplyr::bind_rows(
-  patient_scene_2021,
-  patient_scene_2022,
-  patient_scene_2023,
-  patient_scene_2024
+injury_table <- load_nemsqa_parallel(
+  table = "injury",
+  years = 2021:2025,
+  cores = 13
 )
 
-# set up patient/scene table for manipulations
-patient_scene_clean <- patient_scene_rbind |>
-  clean_names_dates_data()
+# share the injury table
+injury_table_s <- mori::share(injury_table)
 
-# final manipulations on the patient/scene table
+## patient tables ---------------------------------------------------------
+# Utilize mirai for asynchronous loading
+# automatically bind rows
+patient_scene_clean <- load_nemsqa_parallel(
+  table = "patient_scene",
+  years = 2021:2025,
+  cores = 13
+)
+
+### final manipulations on the patient/scene table ----
 # handle multiple issues with location using external data sources with
 # consistent names
+
 patient_scene_table <- patient_scene_clean |>
   dplyr::left_join(
     zipcodes,
@@ -169,52 +136,42 @@ patient_scene_table <- patient_scene_clean |>
     )
   )
 
-### procedures tables ############################################################
-procedures_2021 <- import_nemsqa_data(table = "procedures", year = 2021)
-procedures_2022 <- import_nemsqa_data(table = "procedures", year = 2022)
-procedures_2023 <- import_nemsqa_data(table = "procedures", year = 2023)
-procedures_2024 <- import_nemsqa_data(table = "procedures", year = 2024)
+### remove patient_scene_clean to preserve memory
+rm(patient_scene_clean)
+gc()
 
-# bind rows for the procedures table
-procedures_rbind <- dplyr::bind_rows(
-  procedures_2021,
-  procedures_2022,
-  procedures_2023,
-  procedures_2024
+# share the patient table
+patient_scene_table_s <- mori::share(patient_scene_table)
+
+## procedures tables ------------------------------------------------------
+procedures_table <- load_nemsqa_parallel(
+  table = "procedures",
+  years = 2021:2025,
+  cores = 13
 )
 
-# set up procedures table for manipulations
-procedures_table <- procedures_rbind |>
-  clean_names_dates_data()
+# share the procedures table
+procedures_table_s <- mori::share(procedures_table)
 
-
-### response tables ##############################################################
-response_2021 <- import_nemsqa_data(table = "response", year = 2021)
-response_2022 <- import_nemsqa_data(table = "response", year = 2022)
-response_2023 <- import_nemsqa_data(table = "response", year = 2023)
-response_2024 <- import_nemsqa_data(table = "response", year = 2024)
-
-# bind rows for the response table
-response_rbind <- dplyr::bind_rows(
-  response_2021,
-  response_2022,
-  response_2023,
-  response_2024
+## response tables --------------------------------------------------------
+response_table <- load_nemsqa_parallel(
+  table = "response",
+  years = 2021:2025,
+  cores = 13
 )
 
-# set up response table for manipulations
-response_table <- response_rbind |>
-  clean_names_dates_data()
+# share the response table
+response_table_s <- mori::share(response_table)
 
+# CALCULATIONS ---------------------------------------------------------------
 
-### CALCULATIONS ---------------------------------------------------------------
+## Safety-04 ==================================================================
 
-### Safety-04 ==================================================================
+## safety-04 populations ######################################################
 
-### safety-04 populations ######################################################
+### get safety_04 populations over all years 2021-2025 ---------------------
 
-# over all years 2021-2024
-safety_04_pop <- safety_04_population(
+safety_04_pop <- nemsqar::safety_04_population(
   df = NULL,
   patient_scene_table = patient_scene_table,
   response_table = response_table,
@@ -238,135 +195,76 @@ safety_04_pop <- safety_04_population(
   )
 )
 
-# population results for 2021-2024
+#### population results for 2021-2025 ----
 safety_04_pop_filter_process <- safety_04_pop$filter_process
 
-# 2021
-safety_04_pop_2021 <- safety_04_population(
-  df = NULL,
-  patient_scene_table = patient_scene_table |>
-    dplyr::filter(INCIDENT_YEAR == 2021),
-  response_table = response_table |> dplyr::filter(INCIDENT_YEAR == 2021),
-  arrest_table = arrest_table |> dplyr::filter(INCIDENT_YEAR == 2021),
-  injury_table = injury_table |> dplyr::filter(INCIDENT_YEAR == 2021),
-  procedures_table = procedures_table |> dplyr::filter(INCIDENT_YEAR == 2021),
-  disposition_table = disposition_table |> dplyr::filter(INCIDENT_YEAR == 2021),
-  erecord_01_col = FACT_INCIDENT_PK,
-  incident_date_col = INCIDENT_DATE,
-  patient_DOB_col = PATIENT_DATE_OF_BIRTH_E_PATIENT_17,
-  epatient_15_col = PATIENT_AGE_E_PATIENT_15,
-  epatient_16_col = PATIENT_AGE_UNITS_E_PATIENT_16,
-  eresponse_05_col = RESPONSE_TYPE_OF_SERVICE_REQUESTED_WITH_CODE_E_RESPONSE_05,
-  earrest_01_col = CARDIAC_ARREST_DURING_EMS_EVENT_WITH_CODE_E_ARREST_01,
-  einjury_03_col = INJURY_TRAUMA_CENTER_TRIAGE_CRITERIA_STEPS_1_AND_2_LIST_E_INJURY_03,
-  eprocedures_03_col = PROCEDURE_PERFORMED_DESCRIPTION_AND_CODE_E_PROCEDURES_03,
-  edisposition_14_col = DISPOSITION_POSITION_OF_PATIENT_DURING_TRANSPORT_LIST_E_DISPOSITION_14,
-  transport_disposition_col = c(
-    DISPOSITION_INCIDENT_PATIENT_DISPOSITION_WITH_CODE_3_4_E_DISPOSITION_12_3_5_IT_DISPOSITION_112,
-    TRANSPORT_DISPOSITION_3_4_IT_DISPOSITION_102_3_5_E_DISPOSITION_30
-  )
+#### population results for 2021-2025 ----
+safety_04_missings <- safety_04_pop$missingness
+
+# set up daemons
+mirai::daemons(n = 13)
+
+### get safety_04 population data for each year using mirai and mori -------
+
+# track progress
+tictoc::tic(msg = "safety_04_pop_years_init")
+
+safety_04_pop_years_init <- purrr::map(
+  report_years,
+  \(yr) {
+    # Dynamic message inside the loop
+    cli::cli_alert_info("Running year: {yr}.")
+
+    # loop over years
+    ps_y <- patient_scene_table |> dplyr::filter(INCIDENT_YEAR == yr)
+    rsp_y <- response_table |> dplyr::filter(INCIDENT_YEAR == yr)
+    arr_y <- arrest_table |> dplyr::filter(INCIDENT_YEAR == yr)
+    inj_y <- injury_table |> dplyr::filter(INCIDENT_YEAR == yr)
+    pro_y <- procedures_table |> dplyr::filter(INCIDENT_YEAR == yr)
+    dis_y <- disposition_table |> dplyr::filter(INCIDENT_YEAR == yr)
+
+    # run function in parallel
+    nemsqar::safety_04_population(
+      df = NULL,
+      patient_scene_table = ps_y,
+      response_table = rsp_y,
+      arrest_table = arr_y,
+      injury_table = inj_y,
+      procedures_table = pro_y,
+      disposition_table = dis_y,
+      erecord_01_col = FACT_INCIDENT_PK,
+      incident_date_col = INCIDENT_DATE,
+      patient_DOB_col = PATIENT_DATE_OF_BIRTH_E_PATIENT_17,
+      epatient_15_col = PATIENT_AGE_E_PATIENT_15,
+      epatient_16_col = PATIENT_AGE_UNITS_E_PATIENT_16,
+      eresponse_05_col = RESPONSE_TYPE_OF_SERVICE_REQUESTED_WITH_CODE_E_RESPONSE_05,
+      earrest_01_col = CARDIAC_ARREST_DURING_EMS_EVENT_WITH_CODE_E_ARREST_01,
+      einjury_03_col = INJURY_TRAUMA_CENTER_TRIAGE_CRITERIA_STEPS_1_AND_2_LIST_E_INJURY_03,
+      eprocedures_03_col = PROCEDURE_PERFORMED_DESCRIPTION_AND_CODE_E_PROCEDURES_03,
+      edisposition_14_col = DISPOSITION_POSITION_OF_PATIENT_DURING_TRANSPORT_LIST_E_DISPOSITION_14,
+      transport_disposition_col = c(
+        DISPOSITION_INCIDENT_PATIENT_DISPOSITION_WITH_CODE_3_4_E_DISPOSITION_12_3_5_IT_DISPOSITION_112,
+        TRANSPORT_DISPOSITION_3_4_IT_DISPOSITION_102_3_5_E_DISPOSITION_30
+      )
+    )
+  }
 )
 
-# population results 2021
-safety_04_pop_filter_process_2021 <- safety_04_pop_2021$filter_process |>
-  dplyr::mutate(YEAR = 2021)
+# Get total time
+time <- tictoc::toc()
 
-# 2022
-safety_04_pop_2022 <- safety_04_population(
-  df = NULL,
-  patient_scene_table = patient_scene_table |>
-    dplyr::filter(INCIDENT_YEAR == 2022),
-  response_table = response_table |> dplyr::filter(INCIDENT_YEAR == 2022),
-  arrest_table = arrest_table |> dplyr::filter(INCIDENT_YEAR == 2022),
-  injury_table = injury_table |> dplyr::filter(INCIDENT_YEAR == 2022),
-  procedures_table = procedures_table |> dplyr::filter(INCIDENT_YEAR == 2022),
-  disposition_table = disposition_table |> dplyr::filter(INCIDENT_YEAR == 2022),
-  erecord_01_col = FACT_INCIDENT_PK,
-  incident_date_col = INCIDENT_DATE,
-  patient_DOB_col = PATIENT_DATE_OF_BIRTH_E_PATIENT_17,
-  epatient_15_col = PATIENT_AGE_E_PATIENT_15,
-  epatient_16_col = PATIENT_AGE_UNITS_E_PATIENT_16,
-  eresponse_05_col = RESPONSE_TYPE_OF_SERVICE_REQUESTED_WITH_CODE_E_RESPONSE_05,
-  earrest_01_col = CARDIAC_ARREST_DURING_EMS_EVENT_WITH_CODE_E_ARREST_01,
-  einjury_03_col = INJURY_TRAUMA_CENTER_TRIAGE_CRITERIA_STEPS_1_AND_2_LIST_E_INJURY_03,
-  eprocedures_03_col = PROCEDURE_PERFORMED_DESCRIPTION_AND_CODE_E_PROCEDURES_03,
-  edisposition_14_col = DISPOSITION_POSITION_OF_PATIENT_DURING_TRANSPORT_LIST_E_DISPOSITION_14,
-  transport_disposition_col = c(
-    DISPOSITION_INCIDENT_PATIENT_DISPOSITION_WITH_CODE_3_4_E_DISPOSITION_12_3_5_IT_DISPOSITION_112,
-    TRANSPORT_DISPOSITION_3_4_IT_DISPOSITION_102_3_5_E_DISPOSITION_30
-  )
+#### append years to the population files ----
+safety_04_pop_years <- add_year_to_nested(
+  x = safety_04_pop_years_init,
+  file = "filter_process",
+  years = 2021:2025
 )
 
-# population results 2022
-safety_04_pop_filter_process_2022 <- safety_04_pop_2022$filter_process |>
-  dplyr::mutate(YEAR = 2022)
-
-# 2023
-safety_04_pop_2023 <- safety_04_population(
-  df = NULL,
-  patient_scene_table = patient_scene_table |>
-    dplyr::filter(INCIDENT_YEAR == 2023),
-  response_table = response_table |> dplyr::filter(INCIDENT_YEAR == 2023),
-  arrest_table = arrest_table |> dplyr::filter(INCIDENT_YEAR == 2023),
-  injury_table = injury_table |> dplyr::filter(INCIDENT_YEAR == 2023),
-  procedures_table = procedures_table |> dplyr::filter(INCIDENT_YEAR == 2023),
-  disposition_table = disposition_table |> dplyr::filter(INCIDENT_YEAR == 2023),
-  erecord_01_col = FACT_INCIDENT_PK,
-  incident_date_col = INCIDENT_DATE,
-  patient_DOB_col = PATIENT_DATE_OF_BIRTH_E_PATIENT_17,
-  epatient_15_col = PATIENT_AGE_E_PATIENT_15,
-  epatient_16_col = PATIENT_AGE_UNITS_E_PATIENT_16,
-  eresponse_05_col = RESPONSE_TYPE_OF_SERVICE_REQUESTED_WITH_CODE_E_RESPONSE_05,
-  earrest_01_col = CARDIAC_ARREST_DURING_EMS_EVENT_WITH_CODE_E_ARREST_01,
-  einjury_03_col = INJURY_TRAUMA_CENTER_TRIAGE_CRITERIA_STEPS_1_AND_2_LIST_E_INJURY_03,
-  eprocedures_03_col = PROCEDURE_PERFORMED_DESCRIPTION_AND_CODE_E_PROCEDURES_03,
-  edisposition_14_col = DISPOSITION_POSITION_OF_PATIENT_DURING_TRANSPORT_LIST_E_DISPOSITION_14,
-  transport_disposition_col = c(
-    DISPOSITION_INCIDENT_PATIENT_DISPOSITION_WITH_CODE_3_4_E_DISPOSITION_12_3_5_IT_DISPOSITION_112,
-    TRANSPORT_DISPOSITION_3_4_IT_DISPOSITION_102_3_5_E_DISPOSITION_30
-  )
-)
-
-# population results 2023
-safety_04_pop_filter_process_2023 <- safety_04_pop_2023$filter_process |>
-  dplyr::mutate(YEAR = 2023)
-
-# 2024
-safety_04_pop_2024 <- safety_04_population(
-  df = NULL,
-  patient_scene_table = patient_scene_table |>
-    dplyr::filter(INCIDENT_YEAR == 2024),
-  response_table = response_table |> dplyr::filter(INCIDENT_YEAR == 2024),
-  arrest_table = arrest_table |> dplyr::filter(INCIDENT_YEAR == 2024),
-  injury_table = injury_table |> dplyr::filter(INCIDENT_YEAR == 2024),
-  procedures_table = procedures_table |> dplyr::filter(INCIDENT_YEAR == 2024),
-  disposition_table = disposition_table |> dplyr::filter(INCIDENT_YEAR == 2024),
-  erecord_01_col = FACT_INCIDENT_PK,
-  incident_date_col = INCIDENT_DATE,
-  patient_DOB_col = PATIENT_DATE_OF_BIRTH_E_PATIENT_17,
-  epatient_15_col = PATIENT_AGE_E_PATIENT_15,
-  epatient_16_col = PATIENT_AGE_UNITS_E_PATIENT_16,
-  eresponse_05_col = RESPONSE_TYPE_OF_SERVICE_REQUESTED_WITH_CODE_E_RESPONSE_05,
-  earrest_01_col = CARDIAC_ARREST_DURING_EMS_EVENT_WITH_CODE_E_ARREST_01,
-  einjury_03_col = INJURY_TRAUMA_CENTER_TRIAGE_CRITERIA_STEPS_1_AND_2_LIST_E_INJURY_03,
-  eprocedures_03_col = PROCEDURE_PERFORMED_DESCRIPTION_AND_CODE_E_PROCEDURES_03,
-  edisposition_14_col = DISPOSITION_POSITION_OF_PATIENT_DURING_TRANSPORT_LIST_E_DISPOSITION_14,
-  transport_disposition_col = c(
-    DISPOSITION_INCIDENT_PATIENT_DISPOSITION_WITH_CODE_3_4_E_DISPOSITION_12_3_5_IT_DISPOSITION_112,
-    TRANSPORT_DISPOSITION_3_4_IT_DISPOSITION_102_3_5_E_DISPOSITION_30
-  )
-)
-
-# population results 2024
-safety_04_pop_filter_process_2024 <- safety_04_pop_2024$filter_process |>
-  dplyr::mutate(YEAR = 2024)
-
-# airway-18 populations over the years
-safety_04_pop_years <- dplyr::bind_rows(
-  safety_04_pop_filter_process_2021,
-  safety_04_pop_filter_process_2022,
-  safety_04_pop_filter_process_2023,
-  safety_04_pop_filter_process_2024
+#### append years to the missingness files ----
+safety_04_missingness_years <- add_year_to_nested(
+  x = safety_04_pop_years_init,
+  file = "missingness",
+  years = 2021:2025
 )
 
 # plot population trends over time
@@ -374,15 +272,14 @@ safety_04_pop_years |>
   plot_nemsqa_pops(
     type = "col",
     wrap_width = 25,
-    plot_title = "Safety-04",
-    facets = TRUE,
-    vjust_title = 2,
-    vjust_subtitle = 1.5
+    plot_title = "Safety-04"
   )
 
-### safety-04 results ##########################################################
+## safety-04 results ##########################################################
 
-# year
+### results years ----------------------------------------------------------
+
+#### year ----
 safety_04_result_year <- nemsqar::safety_04(
   df = NULL,
   patient_scene_table = patient_scene_table,
@@ -412,7 +309,9 @@ safety_04_result_year <- nemsqar::safety_04(
   .by = INCIDENT_YEAR
 )
 
-# regions and years
+### results regions and years ----------------------------------------------
+
+#### regions and years ----
 safety_04_result_regions_years <- nemsqar::safety_04(
   df = NULL,
   patient_scene_table = patient_scene_table,
@@ -463,7 +362,9 @@ safety_04_result_regions_years <- nemsqar::safety_04(
     )
   )
 
-# regions
+### results regions --------------------------------------------------------
+
+#### regions ----
 safety_04_result_regions <- nemsqar::safety_04(
   df = NULL,
   patient_scene_table = patient_scene_table,
@@ -513,7 +414,9 @@ safety_04_result_regions <- nemsqar::safety_04(
     )
   )
 
-# counties
+### results counties -------------------------------------------------------
+
+#### counties ----
 safety_04_result_counties <- nemsqar::safety_04(
   df = NULL,
   patient_scene_table = patient_scene_table |>
@@ -561,7 +464,55 @@ safety_04_result_counties <- nemsqar::safety_04(
     )
   )
 
-# overall
+### results counties and years ---------------------------------------------
+
+#### counties and years ----
+safety_04_result_counties_years <- nemsqar::safety_04(
+  df = NULL,
+  patient_scene_table = patient_scene_table,
+  response_table = response_table,
+  arrest_table = arrest_table,
+  injury_table = injury_table,
+  procedures_table = procedures_table,
+  disposition_table = disposition_table,
+  erecord_01_col = FACT_INCIDENT_PK,
+  incident_date_col = INCIDENT_DATE,
+  patient_DOB_col = PATIENT_DATE_OF_BIRTH_E_PATIENT_17,
+  epatient_15_col = PATIENT_AGE_E_PATIENT_15,
+  epatient_16_col = PATIENT_AGE_UNITS_E_PATIENT_16,
+  eresponse_05_col = RESPONSE_TYPE_OF_SERVICE_REQUESTED_WITH_CODE_E_RESPONSE_05,
+  earrest_01_col = CARDIAC_ARREST_DURING_EMS_EVENT_WITH_CODE_E_ARREST_01,
+  einjury_03_col = INJURY_TRAUMA_CENTER_TRIAGE_CRITERIA_STEPS_1_AND_2_LIST_E_INJURY_03,
+  eprocedures_03_col = PROCEDURE_PERFORMED_DESCRIPTION_AND_CODE_E_PROCEDURES_03,
+  edisposition_14_col = DISPOSITION_POSITION_OF_PATIENT_DURING_TRANSPORT_LIST_E_DISPOSITION_14,
+  transport_disposition_col = c(
+    DISPOSITION_INCIDENT_PATIENT_DISPOSITION_WITH_CODE_3_4_E_DISPOSITION_12_3_5_IT_DISPOSITION_112,
+    TRANSPORT_DISPOSITION_3_4_IT_DISPOSITION_102_3_5_E_DISPOSITION_30
+  ),
+  confidence_interval = TRUE,
+  method = "w",
+  conf.level = 0.95,
+  correct = TRUE,
+  .by = c(INCIDENT_YEAR, SCENE_INCIDENT_COUNTY_NAME_E_SCENE_21)
+) |>
+  tidyr::complete(
+    INCIDENT_YEAR,
+    SCENE_INCIDENT_COUNTY_NAME_E_SCENE_21,
+    measure,
+    pop,
+    fill = list(
+      numerator = 0,
+      denominator = 0,
+      prop = NA_real_,
+      prop_label = NA_character_,
+      lower_ci = NA_real_,
+      upper_ci = NA_real_
+    )
+  )
+
+### results overall --------------------------------------------------------
+
+#### overall ----
 safety_04_result_overall <- nemsqar::safety_04(
   df = NULL,
   patient_scene_table = patient_scene_table,
@@ -590,7 +541,9 @@ safety_04_result_overall <- nemsqar::safety_04(
   correct = TRUE
 )
 
-# services
+### results services  ------------------------------------------------------
+
+#### services ----
 safety_04_result_services <- nemsqar::safety_04(
   df = NULL,
   patient_scene_table = patient_scene_table,
@@ -634,9 +587,9 @@ safety_04_result_services <- nemsqar::safety_04(
     )
   )
 
-### EXPORT =====================================================================
+# EXPORT =====================================================================
 
-### population exports #########################################################
+## population exports #########################################################
 
 export_nemsqa_data(
   pattern = "safety_04_pop",
@@ -644,10 +597,18 @@ export_nemsqa_data(
   folder = "population"
 )
 
-### results exports ############################################################
+## results exports ############################################################
 
 export_nemsqa_data(
   pattern = "safety_04_result",
   measure = "Safety-04",
   folder = "result"
+)
+
+## results missingness ########################################################
+
+export_nemsqa_data(
+  pattern = "safety_04_(?:missings|missingness)",
+  measure = "Safety-04",
+  folder = "missings"
 )

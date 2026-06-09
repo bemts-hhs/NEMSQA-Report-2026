@@ -1143,7 +1143,8 @@ import_nemsqa_statistical_files <- function(location = NULL, measure) {
 load_nemsqa_parallel <- function(
   table,
   years = 2021:2025,
-  cores = NULL
+  cores = NULL,
+  exclude = NULL
 ) {
   # record the start time
   start_time <- Sys.time()
@@ -1179,12 +1180,16 @@ load_nemsqa_parallel <- function(
   out_list <- mirai::mirai_map(
     years,
     # Worker function: runs inside each daemon
-    \(yr, tab) {
+    \(yr, tab, ex) {
       # Import year-level table and clean locally
       import_nemsqa_data(table = tab, year = yr) |>
-        clean_names_dates_data()
+        clean_names_dates_data() |>
+        dplyr::select(-tidyselect::all_of(ex))
     },
-    .args = list(tab = table)
+    .args = list(
+      tab = table,
+      ex = exclude
+    )
   )[.progress]
 
   # Bind results into one tibble
