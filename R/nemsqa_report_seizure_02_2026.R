@@ -194,7 +194,6 @@ seizure_02_pop_years_init <- mirai::mirai_map(
     med_y <- med |> dplyr::filter(INCIDENT_YEAR == yr)
 
     # run function in parallel
-
     nemsqar::seizure_02_population(
       df = NULL,
       patient_scene_table = ps_y,
