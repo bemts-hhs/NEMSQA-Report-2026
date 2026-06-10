@@ -238,14 +238,14 @@ asthma_01_pop_years |>
     plot_title = "Asthma-01"
   )
 
-### asthma-01 results ##########################################################
+## asthma-01 results ##########################################################
 
-#### results years ----------------------------------------------------------
+### results years ----------------------------------------------------------
 
 # get start time
 tictoc::tic(msg = "asthma_01_result_year")
 
-### year ----
+#### year ----
 asthma_01_result_year <- mirai::mirai_map(
   report_years,
   \(yr, ps, rsp, sit, med) {

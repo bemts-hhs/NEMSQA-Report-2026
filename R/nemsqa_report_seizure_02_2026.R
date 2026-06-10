@@ -223,6 +223,9 @@ seizure_02_pop_years_init <- mirai::mirai_map(
 # Get total time
 time <- tictoc::toc()
 
+# unburden daemons
+mirai::daemons(n = 0)
+
 #### append years to the population files ----
 seizure_02_pop_years <- add_year_to_nested(
   x = seizure_02_pop_years_init,
@@ -246,53 +249,113 @@ seizure_02_pop_years |>
     plot_title = "Seizure-02"
   )
 
-### seizure-02 results #########################################################
+## seizure-02 results #########################################################
 
-# year
-seizure_02_result_year <- nemsqar::seizure_02(
-  df = NULL,
-  patient_scene_table = patient_scene_table,
-  response_table = response_table,
-  situation_table = situation_table,
-  medications_table = medications_table,
-  erecord_01_col = INCIDENT_PATIENT_CARE_REPORT_NUMBER_PCR_E_RECORD_01,
-  incident_date_col = INCIDENT_DATE,
-  patient_DOB_col = PATIENT_DATE_OF_BIRTH_E_PATIENT_17,
-  epatient_15_col = PATIENT_AGE_E_PATIENT_15,
-  epatient_16_col = PATIENT_AGE_UNITS_E_PATIENT_16,
-  eresponse_05_col = RESPONSE_TYPE_OF_SERVICE_REQUESTED_WITH_CODE_E_RESPONSE_05,
-  esituation_11_col = SITUATION_PROVIDER_PRIMARY_IMPRESSION_CODE_AND_DESCRIPTION_E_SITUATION_11,
-  esituation_12_col = SITUATION_PROVIDER_SECONDARY_IMPRESSION_DESCRIPTION_AND_CODE_LIST_E_SITUATION_12,
-  emedications_03_col = MEDICATION_GIVEN_OR_ADMINISTERED_DESCRIPTION_AND_RXCUI_CODE_E_MEDICATIONS_03,
-  confidence_interval = TRUE,
-  method = "w",
-  conf.level = 0.95,
-  correct = TRUE,
-  .by = INCIDENT_YEAR
-)
+### results years ----------------------------------------------------------
 
-# regions and years
-seizure_02_result_regions_years <- nemsqar::seizure_02(
-  df = NULL,
-  patient_scene_table = patient_scene_table,
-  response_table = response_table,
-  situation_table = situation_table,
-  medications_table = medications_table,
-  erecord_01_col = INCIDENT_PATIENT_CARE_REPORT_NUMBER_PCR_E_RECORD_01,
-  incident_date_col = INCIDENT_DATE,
-  patient_DOB_col = PATIENT_DATE_OF_BIRTH_E_PATIENT_17,
-  epatient_15_col = PATIENT_AGE_E_PATIENT_15,
-  epatient_16_col = PATIENT_AGE_UNITS_E_PATIENT_16,
-  eresponse_05_col = RESPONSE_TYPE_OF_SERVICE_REQUESTED_WITH_CODE_E_RESPONSE_05,
-  esituation_11_col = SITUATION_PROVIDER_PRIMARY_IMPRESSION_CODE_AND_DESCRIPTION_E_SITUATION_11,
-  esituation_12_col = SITUATION_PROVIDER_SECONDARY_IMPRESSION_DESCRIPTION_AND_CODE_LIST_E_SITUATION_12,
-  emedications_03_col = MEDICATION_GIVEN_OR_ADMINISTERED_DESCRIPTION_AND_RXCUI_CODE_E_MEDICATIONS_03,
-  confidence_interval = TRUE,
-  method = "w",
-  conf.level = 0.95,
-  correct = TRUE,
-  .by = c(INCIDENT_YEAR, `Region: Preparedness`)
-) |>
+# set up daemons
+mirai::daemons(n = 13)
+
+# get start time
+tictoc::tic(msg = "seizure_02_result_year")
+
+#### year ----
+seizure_02_result_year <- mirai::mirai_map(
+  report_years,
+  \(yr, ps, rsp, sit, med) {
+    # parallelize by year
+    ps_y <- ps |> dplyr::filter(INCIDENT_YEAR == yr)
+    rsp_y <- rsp |> dplyr::filter(INCIDENT_YEAR == yr)
+    sit_y <- sit |> dplyr::filter(INCIDENT_YEAR == yr)
+    med_y <- med |> dplyr::filter(INCIDENT_YEAR == yr)
+
+    # run function in parallel
+    nemsqar::seizure_02(
+      df = NULL,
+      patient_scene_table = ps_y,
+      response_table = rsp_y,
+      situation_table = sit_y,
+      medications_table = med_y,
+      erecord_01_col = INCIDENT_PATIENT_CARE_REPORT_NUMBER_PCR_E_RECORD_01,
+      incident_date_col = INCIDENT_DATE,
+      patient_DOB_col = PATIENT_DATE_OF_BIRTH_E_PATIENT_17,
+      epatient_15_col = PATIENT_AGE_E_PATIENT_15,
+      epatient_16_col = PATIENT_AGE_UNITS_E_PATIENT_16,
+      eresponse_05_col = RESPONSE_TYPE_OF_SERVICE_REQUESTED_WITH_CODE_E_RESPONSE_05,
+      esituation_11_col = SITUATION_PROVIDER_PRIMARY_IMPRESSION_CODE_AND_DESCRIPTION_E_SITUATION_11,
+      esituation_12_col = SITUATION_PROVIDER_SECONDARY_IMPRESSION_DESCRIPTION_AND_CODE_LIST_E_SITUATION_12,
+      emedications_03_col = MEDICATION_GIVEN_OR_ADMINISTERED_DESCRIPTION_AND_RXCUI_CODE_E_MEDICATIONS_03,
+      confidence_interval = TRUE,
+      method = "w",
+      conf.level = 0.95,
+      correct = TRUE,
+      .by = INCIDENT_YEAR
+    )
+  },
+  .args = list(
+    ps = patient_scene_table_s,
+    rsp = response_table_s,
+    sit = situation_table_s,
+    med = medications_table_s
+  )
+)[.progress] |>
+  dplyr::bind_rows()
+
+# total time
+time_result_year <- tictoc::toc()
+
+# unburden daemons
+mirai::daemons(n = 0)
+
+### results regions and years ----------------------------------------------
+
+# set up daemons
+mirai::daemons(n = 13)
+
+# get start time
+tictoc::tic(msg = "seizure_02_result_regions_year")
+
+#### regions and years ----
+seizure_02_result_regions_years <- mirai::mirai_map(
+  report_years,
+  \(yr, ps, rsp, sit, med) {
+    # parallelize by year
+    ps_y <- ps |> dplyr::filter(INCIDENT_YEAR == yr)
+    rsp_y <- rsp |> dplyr::filter(INCIDENT_YEAR == yr)
+    sit_y <- sit |> dplyr::filter(INCIDENT_YEAR == yr)
+    med_y <- med |> dplyr::filter(INCIDENT_YEAR == yr)
+
+    # run function in parallel
+    nemsqar::seizure_02(
+      df = NULL,
+      patient_scene_table = ps_y,
+      response_table = rsp_y,
+      situation_table = sit_y,
+      medications_table = med_y,
+      erecord_01_col = INCIDENT_PATIENT_CARE_REPORT_NUMBER_PCR_E_RECORD_01,
+      incident_date_col = INCIDENT_DATE,
+      patient_DOB_col = PATIENT_DATE_OF_BIRTH_E_PATIENT_17,
+      epatient_15_col = PATIENT_AGE_E_PATIENT_15,
+      epatient_16_col = PATIENT_AGE_UNITS_E_PATIENT_16,
+      eresponse_05_col = RESPONSE_TYPE_OF_SERVICE_REQUESTED_WITH_CODE_E_RESPONSE_05,
+      esituation_11_col = SITUATION_PROVIDER_PRIMARY_IMPRESSION_CODE_AND_DESCRIPTION_E_SITUATION_11,
+      esituation_12_col = SITUATION_PROVIDER_SECONDARY_IMPRESSION_DESCRIPTION_AND_CODE_LIST_E_SITUATION_12,
+      emedications_03_col = MEDICATION_GIVEN_OR_ADMINISTERED_DESCRIPTION_AND_RXCUI_CODE_E_MEDICATIONS_03,
+      confidence_interval = TRUE,
+      method = "w",
+      conf.level = 0.95,
+      correct = TRUE,
+      .by = c(INCIDENT_YEAR, `Region: Preparedness`)
+    )
+  },
+  .args = list(
+    ps = patient_scene_table_s,
+    rsp = response_table_s,
+    sit = situation_table_s,
+    med = medications_table_s
+  )
+)[.progress] |>
+  dplyr::bind_rows() |>
   dplyr::mutate(
     `Region: Preparedness` = dplyr::if_else(
       is.na(`Region: Preparedness`),
@@ -315,13 +378,21 @@ seizure_02_result_regions_years <- nemsqar::seizure_02(
     )
   )
 
-# regions
+# total time
+time_result_regions_year <- tictoc::toc()
+
+# unburden daemons
+mirai::daemons(n = 0)
+
+### results regions --------------------------------------------------------
+
+#### regions ----
 seizure_02_result_regions <- nemsqar::seizure_02(
   df = NULL,
-  patient_scene_table = patient_scene_table,
-  response_table = response_table,
-  situation_table = situation_table,
-  medications_table = medications_table,
+  patient_scene_table = patient_scene_table_s,
+  response_table = response_table_s,
+  situation_table = situation_table_s,
+  medications_table = medications_table_s,
   erecord_01_col = INCIDENT_PATIENT_CARE_REPORT_NUMBER_PCR_E_RECORD_01,
   incident_date_col = INCIDENT_DATE,
   patient_DOB_col = PATIENT_DATE_OF_BIRTH_E_PATIENT_17,
@@ -358,18 +429,15 @@ seizure_02_result_regions <- nemsqar::seizure_02(
     )
   )
 
-# counties
+### results counties -------------------------------------------------------
+
+#### counties ----
 seizure_02_result_counties <- nemsqar::seizure_02(
   df = NULL,
-  patient_scene_table = patient_scene_table |>
-    dplyr::mutate(
-      SCENE_INCIDENT_COUNTY_NAME_E_SCENE_21 = factor(
-        SCENE_INCIDENT_COUNTY_NAME_E_SCENE_21
-      )
-    ),
-  response_table = response_table,
-  situation_table = situation_table,
-  medications_table = medications_table,
+  patient_scene_table = patient_scene_table_s,
+  response_table = response_table_s,
+  situation_table = situation_table_s,
+  medications_table = medications_table_s,
   erecord_01_col = INCIDENT_PATIENT_CARE_REPORT_NUMBER_PCR_E_RECORD_01,
   incident_date_col = INCIDENT_DATE,
   patient_DOB_col = PATIENT_DATE_OF_BIRTH_E_PATIENT_17,
@@ -399,13 +467,85 @@ seizure_02_result_counties <- nemsqar::seizure_02(
     )
   )
 
-# overall
+### results counties years -------------------------------------------------
+
+# set up daemons
+mirai::daemons(n = 13)
+
+# start time counties / years
+tictoc::tic(msg = "seizure_02_result_counties_years")
+
+#### counties years ----
+seizure_02_result_counties_years <- mirai::mirai_map(
+  report_years,
+  \(yr, ps, rsp, sit, med) {
+    # parallelize by year
+    ps_y <- ps |> dplyr::filter(INCIDENT_YEAR == yr)
+    rsp_y <- rsp |> dplyr::filter(INCIDENT_YEAR == yr)
+    sit_y <- sit |> dplyr::filter(INCIDENT_YEAR == yr)
+    med_y <- med |> dplyr::filter(INCIDENT_YEAR == yr)
+
+    # run function in parallel
+    nemsqar::seizure_02(
+      df = NULL,
+      patient_scene_table = ps_y,
+      response_table = rsp_y,
+      situation_table = sit_y,
+      medications_table = med_y,
+      erecord_01_col = INCIDENT_PATIENT_CARE_REPORT_NUMBER_PCR_E_RECORD_01,
+      incident_date_col = INCIDENT_DATE,
+      patient_DOB_col = PATIENT_DATE_OF_BIRTH_E_PATIENT_17,
+      epatient_15_col = PATIENT_AGE_E_PATIENT_15,
+      epatient_16_col = PATIENT_AGE_UNITS_E_PATIENT_16,
+      eresponse_05_col = RESPONSE_TYPE_OF_SERVICE_REQUESTED_WITH_CODE_E_RESPONSE_05,
+      esituation_11_col = SITUATION_PROVIDER_PRIMARY_IMPRESSION_CODE_AND_DESCRIPTION_E_SITUATION_11,
+      esituation_12_col = SITUATION_PROVIDER_SECONDARY_IMPRESSION_DESCRIPTION_AND_CODE_LIST_E_SITUATION_12,
+      emedications_03_col = MEDICATION_GIVEN_OR_ADMINISTERED_DESCRIPTION_AND_RXCUI_CODE_E_MEDICATIONS_03,
+      confidence_interval = TRUE,
+      method = "w",
+      conf.level = 0.95,
+      correct = TRUE,
+      .by = c(INCIDENT_YEAR, SCENE_INCIDENT_COUNTY_NAME_E_SCENE_21)
+    )
+  },
+  .args = list(
+    ps = patient_scene_table_s,
+    rsp = response_table_s,
+    sit = situation_table_s,
+    med = medications_table_s
+  )
+)[.progress] |>
+  dplyr::bind_rows() |>
+  tidyr::complete(
+    INCIDENT_YEAR,
+    SCENE_INCIDENT_COUNTY_NAME_E_SCENE_21,
+    measure,
+    pop,
+    fill = list(
+      numerator = 0,
+      denominator = 0,
+      prop = NA_real_,
+      prop_label = NA_character_,
+      lower_ci = NA_real_,
+      upper_ci = NA_real_
+    )
+  )
+
+# total time
+time_result_counties_years <- tictoc::toc()
+
+# unburden daemons
+mirai::daemons(n = 0)
+
+### results overall --------------------------------------------------------
+
+#### overall ----
 seizure_02_result_overall <- nemsqar::seizure_02(
   df = NULL,
-  patient_scene_table = patient_scene_table,
-  response_table = response_table,
-  situation_table = situation_table,
-  medications_table = medications_table,
+  patient_scene_table = patient_scene_table_s,
+  response_table = response_table_s,
+  situation_table = situation_table_s,
+  medications_table = medications_table_s,
   erecord_01_col = INCIDENT_PATIENT_CARE_REPORT_NUMBER_PCR_E_RECORD_01,
   incident_date_col = INCIDENT_DATE,
   patient_DOB_col = PATIENT_DATE_OF_BIRTH_E_PATIENT_17,
@@ -421,28 +561,55 @@ seizure_02_result_overall <- nemsqar::seizure_02(
   correct = TRUE
 )
 
-# services
-seizure_02_result_services <- nemsqar::seizure_02(
-  df = NULL,
-  patient_scene_table = patient_scene_table,
-  response_table = response_table,
-  situation_table = situation_table,
-  medications_table = medications_table,
-  erecord_01_col = INCIDENT_PATIENT_CARE_REPORT_NUMBER_PCR_E_RECORD_01,
-  incident_date_col = INCIDENT_DATE,
-  patient_DOB_col = PATIENT_DATE_OF_BIRTH_E_PATIENT_17,
-  epatient_15_col = PATIENT_AGE_E_PATIENT_15,
-  epatient_16_col = PATIENT_AGE_UNITS_E_PATIENT_16,
-  eresponse_05_col = RESPONSE_TYPE_OF_SERVICE_REQUESTED_WITH_CODE_E_RESPONSE_05,
-  esituation_11_col = SITUATION_PROVIDER_PRIMARY_IMPRESSION_CODE_AND_DESCRIPTION_E_SITUATION_11,
-  esituation_12_col = SITUATION_PROVIDER_SECONDARY_IMPRESSION_DESCRIPTION_AND_CODE_LIST_E_SITUATION_12,
-  emedications_03_col = MEDICATION_GIVEN_OR_ADMINISTERED_DESCRIPTION_AND_RXCUI_CODE_E_MEDICATIONS_03,
-  confidence_interval = TRUE,
-  method = "w",
-  conf.level = 0.95,
-  correct = TRUE,
-  .by = c(INCIDENT_YEAR, AGENCY_NAME_D_AGENCY_03)
-) |>
+### results services -------------------------------------------------------
+
+# set up daemons
+mirai::daemons(n = 13)
+
+# get start time
+tictoc::tic(msg = "seizure_02_result_services")
+
+#### services ----
+seizure_02_result_services <- mirai::mirai_map(
+  report_years,
+  \(yr, ps, rsp, sit, med) {
+    # parallelize by year
+    ps_y <- ps |> dplyr::filter(INCIDENT_YEAR == yr)
+    rsp_y <- rsp |> dplyr::filter(INCIDENT_YEAR == yr)
+    sit_y <- sit |> dplyr::filter(INCIDENT_YEAR == yr)
+    med_y <- med |> dplyr::filter(INCIDENT_YEAR == yr)
+
+    # run function in parallel
+    nemsqar::seizure_02(
+      df = NULL,
+      patient_scene_table = ps_y,
+      response_table = rsp_y,
+      situation_table = sit_y,
+      medications_table = med_y,
+      erecord_01_col = INCIDENT_PATIENT_CARE_REPORT_NUMBER_PCR_E_RECORD_01,
+      incident_date_col = INCIDENT_DATE,
+      patient_DOB_col = PATIENT_DATE_OF_BIRTH_E_PATIENT_17,
+      epatient_15_col = PATIENT_AGE_E_PATIENT_15,
+      epatient_16_col = PATIENT_AGE_UNITS_E_PATIENT_16,
+      eresponse_05_col = RESPONSE_TYPE_OF_SERVICE_REQUESTED_WITH_CODE_E_RESPONSE_05,
+      esituation_11_col = SITUATION_PROVIDER_PRIMARY_IMPRESSION_CODE_AND_DESCRIPTION_E_SITUATION_11,
+      esituation_12_col = SITUATION_PROVIDER_SECONDARY_IMPRESSION_DESCRIPTION_AND_CODE_LIST_E_SITUATION_12,
+      emedications_03_col = MEDICATION_GIVEN_OR_ADMINISTERED_DESCRIPTION_AND_RXCUI_CODE_E_MEDICATIONS_03,
+      confidence_interval = TRUE,
+      method = "w",
+      conf.level = 0.95,
+      correct = TRUE,
+      .by = c(INCIDENT_YEAR, AGENCY_NAME_D_AGENCY_03)
+    )
+  },
+  .args = list(
+    ps = patient_scene_table_s,
+    rsp = response_table_s,
+    sit = situation_table_s,
+    med = medications_table_s
+  )
+)[.progress] |>
+  dplyr::bind_rows() |>
   tidyr::complete(
     INCIDENT_YEAR,
     AGENCY_NAME_D_AGENCY_03,
@@ -458,9 +625,15 @@ seizure_02_result_services <- nemsqar::seizure_02(
     )
   )
 
-### EXPORT =====================================================================
+# total time
+time_result_services <- tictoc::toc()
 
-### population exports #########################################################
+# unburden daemons
+mirai::daemons(n = 0)
+
+# EXPORT =====================================================================
+
+## population exports #########################################################
 
 export_nemsqa_data(
   pattern = "seizure_02_pop",
@@ -468,10 +641,18 @@ export_nemsqa_data(
   folder = "population"
 )
 
-### results exports ############################################################
+## results exports ############################################################
 
 export_nemsqa_data(
   pattern = "seizure_02_result",
   measure = "Seizure-02",
   folder = "result"
+)
+
+## missingness exports ########################################################
+
+export_nemsqa_data(
+  pattern = "seizure_02_(?:missings|missingness)",
+  measure = "Seizure-02",
+  folder = "missings"
 )
