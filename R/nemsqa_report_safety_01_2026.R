@@ -1,4 +1,4 @@
-### IOWA NEMSQA REPORT SAFETY-01 2026 ------------------------------------
+# IOWA NEMSQA REPORT SAFETY-01 2026 ------------------------------------
 
 ###_____________________________________________________________________________
 # this script will contain all reporting calculations for Safety-01
