@@ -239,7 +239,6 @@ seizure_02_missingness_years <- add_year_to_nested(
   years = 2021:2025
 )
 
-
 # plot population trends over time
 seizure_02_pop_years |>
   plot_nemsqa_pops(
