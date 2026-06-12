@@ -129,17 +129,6 @@ situation_table <- load_nemsqa_parallel(
 # Share the situation_table
 situation_table_s <- mori::share(situation_table)
 
-## situation tables -------------------------------------------------------
-# set up situation table for manipulations
-situation_table <- load_nemsqa_parallel(
-  table = "situation",
-  years = 2021:2025,
-  cores = 13
-)
-
-# Share the situation_table
-situation_table_s <- mori::share(situation_table)
-
 ## vitals tables ----------------------------------------------------------
 vitals_table <- load_nemsqa_parallel(
   table = "vitals",

@@ -936,7 +936,7 @@ prepare_population_statistical_file <- function(df) {
   }
 
   # Validate required columns exist in `df`
-  required_columns <- c("filter", "YEAR", "count")
+  required_columns <- c("filter", "Year", "count")
   missing_columns <- setdiff(required_columns, colnames(df))
 
   if (length(missing_columns) > 0) {
@@ -951,7 +951,7 @@ prepare_population_statistical_file <- function(df) {
     # Reshape data from long to wide format
     tidyr::pivot_wider(
       id_cols = filter,
-      names_from = YEAR,
+      names_from = Year,
       values_from = count
     ) |>
 
@@ -1624,6 +1624,17 @@ population_statistical_file_gt <- function(df, measure, fig_dim = c(5, 30)) {
 
       # Format all numeric columns (except "Populations") as integers
       gt::fmt_integer(columns = -Populations) |>
+
+      # Add a total column
+      gt::summary_columns(
+        columns = `2021`:`2025`,
+        fns = ~ sum(., na.rm = TRUE),
+        new_col_names = "Total",
+        fmt = ~ gt::fmt_integer(.)
+      ) |>
+
+      # Move
+      gt::cols_move(columns = "Total", after = "2025") |>
 
       # Add a sparkline visualization for population trends
       gtExtras::gt_plt_sparkline(

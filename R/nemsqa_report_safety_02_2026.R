@@ -25,7 +25,7 @@
 # tables imported in alphabetical order
 # tables do not need to be loaded again if already in memory
 
-## disposition tables ###########################################################
+## disposition tables -----------------------------------------------------
 disposition_table <- load_nemsqa_parallel(
   table = "disposition",
   years = 2021:2025,
