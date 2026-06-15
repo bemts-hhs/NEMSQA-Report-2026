@@ -84,8 +84,13 @@ report_regions <- c("1A", "1C", as.character(c(2:7)))
 # )
 
 ###___________________________________________________________________________
-# Get location data
+# Get location data ----
 ###___________________________________________________________________________
+
+# hospitals
+facilities <- readxl::read_excel(
+  path = "C:/Users/nfoss0/OneDrive - State of Iowa HHS/Desktop/Analytics/Analytics Builds/GitHub/Reference-Files/facility_names_levels_sa_2025.xlsx"
+)
 
 # Get the secure county data file path
 county_data_path <- Sys.getenv("COUNTY_FILE_PATH")

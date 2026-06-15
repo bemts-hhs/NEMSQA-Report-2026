@@ -517,11 +517,11 @@ trauma_03_result_counties_years <- nemsqar::trauma_03(
 #### overall ----
 trauma_03_result_overall <- nemsqar::trauma_03(
   df = NULL,
-  patient_scene_table = patient_scene_table,
-  response_table = response_table,
-  situation_table = situation_table,
-  disposition_table = disposition_table,
-  vitals_table = vitals_table,
+  patient_scene_table = patient_scene_table_s,
+  response_table = response_table_s,
+  situation_table = situation_table_s,
+  disposition_table = disposition_table_s,
+  vitals_table = vitals_table_s,
   erecord_01_col = FACT_INCIDENT_PK,
   incident_date_col = INCIDENT_DATE,
   patient_DOB_col = PATIENT_DATE_OF_BIRTH_E_PATIENT_17,
@@ -546,20 +546,14 @@ trauma_03_result_overall <- nemsqar::trauma_03(
 
 ### results services -------------------------------------------------------
 
-# set up daemons
-mirai::daemons(n = 13)
-
-# get start time
-tictoc::tic(msg = "trauma_03_result_services")
-
 #### services ----
 trauma_03_result_services <- nemsqar::trauma_03(
   df = NULL,
-  patient_scene_table = patient_scene_table,
-  response_table = response_table,
-  situation_table = situation_table,
-  disposition_table = disposition_table,
-  vitals_table = vitals_table,
+  patient_scene_table = patient_scene_table_s,
+  response_table = response_table_s,
+  situation_table = situation_table_s,
+  disposition_table = disposition_table_s,
+  vitals_table = vitals_table_s,
   erecord_01_col = FACT_INCIDENT_PK,
   incident_date_col = INCIDENT_DATE,
   patient_DOB_col = PATIENT_DATE_OF_BIRTH_E_PATIENT_17,
@@ -596,12 +590,6 @@ trauma_03_result_services <- nemsqar::trauma_03(
       upper_ci = NA_real_
     )
   )
-
-# total time
-time_result_services <- tictoc::toc()
-
-# unburden daemons
-mirai::daemons(n = 0)
 
 # EXPORT =====================================================================
 
