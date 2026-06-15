@@ -14,6 +14,12 @@
 # should be used at all for certain NEMSQA measure analyses.
 ###___________________________________________________________________________
 
+###___________________________________________________________________________
+# Note on parallel processing - due to the heavy overhead involved with this
+# function, we will only use nemsqar's built in grouping capabilities and will
+# not leverage mori. mirai will only be used here for data ingestion.
+###___________________________________________________________________________
+
 # DATA -----------------------------------------------------------------------
 
 # tables imported in alphabetical order
@@ -239,7 +245,7 @@ trauma_04_pop <- nemsqar::trauma_04_population(
 # population results for 2021-2025
 trauma_04_pop_filter_process <- trauma_04_pop$filter_process
 
-# population results for 2021-2025
+# population missingness for 2021-2025
 trauma_04_missings <- trauma_04_pop$missingness
 
 ### get trauma_04 population data for each year using mirai and mori ------

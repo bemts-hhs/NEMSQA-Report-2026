@@ -14,6 +14,12 @@
 # should be used at all for certain NEMSQA measure analyses.
 ###___________________________________________________________________________
 
+###___________________________________________________________________________
+# Note on parallel processing - due to the heavy overhead involved with this
+# function, we will only use nemsqar's built in grouping capabilities and will
+# not leverage mori. mirai will only be used here for data ingestion.
+###___________________________________________________________________________
+
 # DATA -----------------------------------------------------------------------
 
 # tables imported in alphabetical order
