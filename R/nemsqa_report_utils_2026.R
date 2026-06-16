@@ -543,6 +543,133 @@ clean_county_names_2 <-
 ### HELPER FILES/FUNCTIONS =====================================================
 
 #_____________________________________________________________________________
+# Function: pattern_rm()
+#_____________________________________________________________________________
+# This function removes objects from an environment whose names match a regular
+# expression pattern. It supports verbosity, dry-run inspection, protection of
+# specified objects, interactive confirmation, and CLI-based messaging.
+#
+# Arguments:
+#   - pattern:     A character string specifying the regex pattern used to
+#                  identify objects for removal.
+#   - env:         The environment from which objects will be removed.
+#                  Defaults to the global environment.
+#   - protect:     A single regular expression. Any object name matching this
+#                  pattern will be protected from removal.
+#   - verbose:     Logical. If TRUE, information on matched and removed
+#                  objects is printed. Defaults to FALSE.
+#   - dry_run:     Logical. If TRUE, the function only reports what would be
+#                  removed without performing deletion. Defaults to FALSE.
+#   - permission:  Logical. If TRUE, removal proceeds without prompting. If
+#                  FALSE, removal proceeds with prompting. Interactive
+#                  prompts produce an internal logical object `permit` that
+#                  determines whether removal is executed.
+#
+# Returns:
+#   - Invisibly returns the character vector of objects removed (or that would
+#     be removed during dry-run).
+#
+# Notes:
+#   - Uses cli::cli_inform(), cli::cli_warn(), and cli::cli_abort() for
+#     structured messaging.
+#   - The function does not remove objects in attached package namespaces.
+#   - Interactive prompts set an internal object `permit`. If `permit` is
+#     FALSE, removal is cancelled with cli::cli_alert_info() and no objects
+#     are removed.
+#_____________________________________________________________________________
+
+pattern_rm <- function(
+  pattern,
+  env = .GlobalEnv,
+  protect = character(0),
+  verbose = FALSE,
+  dry_run = FALSE,
+  permission = NULL
+) {
+  # Use regex to match objects in the target environment
+  all_objs <- base::ls(envir = env, pattern = pattern)
+
+  # Pattern-based protection
+  if (!is.null(protect) && length(protect) == 1 && nzchar(protect)) {
+    protected_objs <- all_objs[grepl(pattern = protect, x = all_objs)]
+
+    # Inform user of protected objects
+    cli::cli_alert_info(
+      text = "The following objects were protected: {cli::col_green(paste(protected_objs, collapse = ', '))}"
+    )
+  } else {
+    protected_objs <- character(0)
+
+    # Inform user of no protected objects
+    cli::cli_alert_info(
+      "No objects were submitted for protection from removal."
+    )
+  }
+
+  # Remove any protected_objs from all_objs
+  objs <- setdiff(x = all_objs, y = protected_objs)
+
+  # Inform the user that no objects were removed due to protection
+  if (length(all_objs) > 0 && length(objs) == 0) {
+    cli::cli_alert_warning("Pattern matched objects, but all were protected.")
+    return(invisible(character(0)))
+  }
+
+  if (length(objs) == 0) {
+    if (verbose) {
+      cli::cli_alert_info("No objects matched the pattern.")
+    }
+    return(invisible(character(0)))
+  }
+
+  # Print matched objects to the console
+  if (verbose) {
+    cli::cli_alert_info("Matched objects:")
+    ul <- cli::cli_ul()
+
+    cli::cli_ol(
+      cli::col_magenta(objs)
+    )
+    cli::cli_end(ul)
+  }
+
+  # Engage dry run mode and remove no objects
+  if (dry_run) {
+    cli::cli_alert_info("Dry run mode engaged. No objects will be removed.")
+    return(invisible(objs))
+  }
+
+  # Interactive permission logic
+  if (!permission) {
+    if (interactive()) {
+      ans <- readline("Remove matched objects? (y/n): ")
+      permit <- tolower(ans) == "y"
+    } else {
+      cli::cli_abort(
+        "Interactive confirmation requested in a non-interactive session."
+      )
+    }
+  } else {
+    permit <- TRUE
+  }
+
+  if (!permit) {
+    cli::cli_alert_info("Removal cancelled. No objects were removed.")
+    return(invisible(character(0)))
+  }
+
+  if (verbose) {
+    cli::cli_alert_info("Objects removed and garbage collection executed.")
+  }
+
+  # Perform removal
+  base::rm(list = objs, envir = env)
+  base::gc()
+
+  invisible(objs)
+}
+
+#_____________________________________________________________________________
 # Function: generate_random_ID()
 #_____________________________________________________________________________
 # This function generates a set of unique random IDs consisting of 10

@@ -1,26 +1,26 @@
-### IOWA NEMSQA REPORT VISUALIZATIONS Hypoglycemia-01 2025 ---------------------------
+# IOWA NEMSQA REPORT VISUALIZATIONS Hypoglycemia-01 2026 ---------------------------
 
 ###_____________________________________________________________________________
 # this script will contain all reporting visualizations for Hypoglycemia-01 use:
 # nemsqa_report_prep_2025.R to get critical functions into memory
-# nemsqa_report_hypoglycemia_01_2025.R to generate statistical files for the report
+# nemsqa_report_hypoglycemia_01_2026.R to generate statistical files for the report
 ###_____________________________________________________________________________
 # assume:
 # that nemsqa_report_prep_2025.R was already ran to load needed packages
 # and project-specific custom functions in the project
-# nemsqa_report_hypoglycemia_01_2025.R was ran to generate statistical files
+# nemsqa_report_hypoglycemia_01_2026.R was ran to generate statistical files
 ###_____________________________________________________________________________
 
-### DATA -----------------------------------------------------------------------
+# DATA -----------------------------------------------------------------------
 
 # import statistical outputs for this measure
 import_nemsqa_statistical_files(measure = "Hypoglycemia-01")
 
-### TABLES ---------------------------------------------------------------------
+# TABLES ---------------------------------------------------------------------
 
-### population data ############################################################
+# population data ############################################################
 
-# generate the population gt table
+## generate the population gt table ----
 hypoglycemia_01_pop_gt <- hypoglycemia_01_pop_years |>
   prepare_population_statistical_file() |>
   population_statistical_file_gt(
@@ -45,12 +45,13 @@ export_nemsqa_gt(
   gt_object = hypoglycemia_01_pop_gt,
   measure = "Hypoglycemia-01",
   folder = "pop",
-  extension = "png"
+  extension = "png",
+  vwidth = 1065
 )
 
-### results data ###############################################################
+# results data ###############################################################
 
-# generate the results gt table
+## generate the results gt table ----
 hypoglycemia_01_results_gt <- hypoglycemia_01_result_year |>
   prepare_results_statistical_file() |>
   results_statistical_file_gt(groups = c("INCIDENT_YEAR")) |>
@@ -86,14 +87,14 @@ export_nemsqa_gt(
 # Run only once per session
 iowa_counties_sf <- prepare_map_data()
 
-# summarize performance statewide over the timeframe of interest
+## summarize performance statewide over the timeframe of interest ----
 hypoglycemia_01_result_counties_map <- results_to_county_map(
   df = hypoglycemia_01_result_counties,
   add_text = FALSE,
   format = "percent"
 )
 
-# save the plot
+## save the plot ----
 ggplot2::ggsave(
   filename = "hypoglycemia_01_result_counties_map.png",
   plot = hypoglycemia_01_result_counties_map,
