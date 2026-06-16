@@ -1,4 +1,4 @@
-### IOWA NEMSQA REPORT VISUALIZATIONS Airway-18 2025 ---------------------------
+# IOWA NEMSQA REPORT VISUALIZATIONS Airway-18 2025 ---------------------------
 
 ###_____________________________________________________________________________
 # this script will contain all reporting visualizations for Airway-18 use:
@@ -11,17 +11,18 @@
 # nemsqa_report_airway_18_2025.R was ran to generate statistical files
 ###_____________________________________________________________________________
 
-### DATA -----------------------------------------------------------------------
+# DATA -----------------------------------------------------------------------
 
 # import statistical outputs for this measure
 import_nemsqa_statistical_files(measure = "Airway-18")
 
-### TABLES ---------------------------------------------------------------------
+# TABLES ---------------------------------------------------------------------
 
-### population data ############################################################
+# population data ############################################################
 
-# generate the population gt table
+## generate the population gt table ----
 airway_18_pop_gt <- airway_18_pop_years |>
+  dplyr::rename(Year = YEAR) |>
   prepare_population_statistical_file() |>
   population_statistical_file_gt(measure = "Airway-18", fig_dim = c(8, 40)) |>
   tab_style_hhs(
@@ -42,12 +43,13 @@ export_nemsqa_gt(
   gt_object = airway_18_pop_gt,
   measure = "Airway-18",
   folder = "pop",
-  extension = "png"
+  extension = "png",
+  vwidth = 1065
 )
 
-### results data ###############################################################
+# results data ###############################################################
 
-# generate the results gt table
+## generate the results gt table ----
 airway_18_results_gt <- airway_18_result_year |>
   prepare_results_statistical_file() |>
   results_statistical_file_gt(groups = c("INCIDENT_YEAR")) |>
@@ -83,14 +85,14 @@ export_nemsqa_gt(
 # Run only once per session
 iowa_counties_sf <- prepare_map_data()
 
-# summarize performance statewide over the timeframe of interest
+## summarize performance statewide over the timeframe of interest ----
 airway_18_result_counties_map <- results_to_county_map(
   df = airway_18_result_counties,
   add_text = FALSE,
   format = "percent"
 )
 
-# save the plot
+## save the plot ----
 ggplot2::ggsave(
   filename = "airway_18_result_counties_map.png",
   plot = airway_18_result_counties_map,

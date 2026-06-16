@@ -1,4 +1,4 @@
-### IOWA NEMSQA REPORT VISUALIZATIONS AIRWAY-01 2025 ---------------------------
+# IOWA NEMSQA REPORT VISUALIZATIONS AIRWAY-01 2025 ---------------------------
 
 ###_____________________________________________________________________________
 # this script will contain all reporting visualizations for Airway-01 use:
@@ -11,19 +11,19 @@
 # nemsqa_report_airway_01_2025.R was ran to generate statistical files
 ###_____________________________________________________________________________
 
-### DATA -----------------------------------------------------------------------
+# DATA -----------------------------------------------------------------------
 
 # import statistical outputs for this measure
 import_nemsqa_statistical_files(measure = "Airway-01")
 
-### TABLES ---------------------------------------------------------------------
+# TABLES ---------------------------------------------------------------------
 
-### population data ############################################################
+# population data ############################################################
 
-# generate the population gt table
+## generate the population gt table ----
 airway_01_pop_gt <- airway_01_pop_years |>
   prepare_population_statistical_file() |>
-  population_statistical_file_gt(measure = "Airway-01", fig_dim = c(8, 40)) |>
+  population_statistical_file_gt(measure = "Airway-01", fig_dim = c(10, 45)) |>
   tab_style_hhs(
     message_text = "* Indicates masked data with n < 6. Population Trend horizontal lines indicate the arithmetic mean for that population group.",
     border_cols = -1,
@@ -42,12 +42,13 @@ export_nemsqa_gt(
   gt_object = airway_01_pop_gt,
   measure = "Airway-01",
   folder = "pop",
-  extension = "png"
+  extension = "png",
+  vwidth = 1065
 )
 
-### results data ###############################################################
+# results data ###############################################################
 
-# generate the results gt table
+## generate the results gt table ----
 airway_01_results_gt <- airway_01_result_year |>
   prepare_results_statistical_file() |>
   results_statistical_file_gt(groups = c("INCIDENT_YEAR")) |>
@@ -71,7 +72,7 @@ airway_01_results_gt <- airway_01_result_year |>
     footnote = 20
   )
 
-# save the table
+## save the table ----
 export_nemsqa_gt(
   gt_object = airway_01_results_gt,
   measure = "Airway-01",
@@ -79,11 +80,11 @@ export_nemsqa_gt(
   extension = "png"
 )
 
-# Load the shapefile into memory
+## Load the shapefile into memory
 # Run only once per session
 iowa_counties_sf <- prepare_map_data()
 
-# summarize performance statewide over the timeframe of interest
+## summarize performance statewide over the timeframe of interest ----
 airway_01_result_counties_map <- results_to_county_map(
   df = airway_01_result_counties,
   add_text = FALSE,
@@ -91,7 +92,7 @@ airway_01_result_counties_map <- results_to_county_map(
   by = 0.1
 )
 
-# save the plot
+## save the plot ----
 ggplot2::ggsave(
   filename = "airway_01_result_counties_map.png",
   plot = airway_01_result_counties_map,
