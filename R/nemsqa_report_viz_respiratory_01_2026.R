@@ -97,7 +97,7 @@ respiratory_01_result_counties_map <- results_to_county_map(
 ggplot2::ggsave(
   filename = "respiratory_01_result_counties_map.png",
   plot = respiratory_01_result_counties_map,
-  path = "C:/Users/nfoss0/OneDrive - State of Iowa HHS/Analytics/BEMTS/NEMSQA Report/2025/output/Respiratory-01/result",
+  path = "C:/Users/nfoss0/OneDrive - State of Iowa HHS/Analytics/BEMTS/NEMSQA Report/2026/output/Respiratory-01/result",
   width = 7.5,
   height = 6
 )

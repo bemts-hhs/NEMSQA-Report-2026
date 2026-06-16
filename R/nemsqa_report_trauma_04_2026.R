@@ -242,13 +242,13 @@ trauma_04_pop <- nemsqar::trauma_04_population(
   einjury_09_col = INJURY_HEIGHT_OF_FALL_IN_FEET_E_INJURY_09
 )
 
-# population results for 2021-2025
+#### population results for 2021-2025 ----
 trauma_04_pop_filter_process <- trauma_04_pop$filter_process
 
-# population missingness for 2021-2025
+#### population missingness for 2021-2025 ----
 trauma_04_missings <- trauma_04_pop$missingness
 
-### get trauma_04 population data for each year using mirai and mori ------
+### get trauma_04 population data for each year using purrr ------
 
 # track progress
 tictoc::tic(msg = "trauma_04_pop_years_init")

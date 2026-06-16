@@ -52,10 +52,12 @@ airway_05_results_gt <- airway_05_result_year |>
   prepare_results_statistical_file() |>
   results_statistical_file_gt(groups = c("INCIDENT_YEAR")) |>
   # Add various source notes with icons from fontawesome
-  gt::tab_source_note(source_note = gt::md(paste0(
-    fontawesome::fa("note-sticky"),
-    " * Indicates masked data with n < 6."
-  ))) |>
+  gt::tab_source_note(
+    source_note = gt::md(paste0(
+      fontawesome::fa("note-sticky"),
+      " * Indicates masked data with n < 6."
+    ))
+  ) |>
   tab_style_hhs(
     message_text = "`Comparison` indicates the result with 95% confidence intervals.",
     border_cols = c(-1, -2),
@@ -82,15 +84,17 @@ export_nemsqa_gt(
 iowa_counties_sf <- prepare_map_data()
 
 # summarize performance statewide over the timeframe of interest
-airway_05_result_counties_map <- results_to_county_map(df = airway_05_result_counties,
-                                                       add_text = FALSE,
-                                                       format = "percent")
+airway_05_result_counties_map <- results_to_county_map(
+  df = airway_05_result_counties,
+  add_text = FALSE,
+  format = "percent"
+)
 
 # save the plot
 ggplot2::ggsave(
   filename = "airway_05_result_counties_map.png",
   plot = airway_05_result_counties_map,
-  path = "C:/Users/nfoss0/OneDrive - State of Iowa HHS/Analytics/BEMTS/NEMSQA Report/2025/output/Airway-05/result",
+  path = "C:/Users/nfoss0/OneDrive - State of Iowa HHS/Analytics/BEMTS/NEMSQA Report/2026/output/Airway-05/result",
   width = 7,
   height = 6
 )

@@ -1,14 +1,14 @@
-### IOWA NEMSQA REPORT VISUALIZATIONS TTR-01 2025 ---------------------------
+### IOWA NEMSQA REPORT VISUALIZATIONS TTR-01 2026 ---------------------------
 
 ###_____________________________________________________________________________
 # this script will contain all reporting visualizations for TTR-01 use:
-# nemsqa_report_prep_2025.R to get critical functions into memory
-# nemsqa_report_ttr_01_2025.R to generate statistical files for the report
+# nemsqa_report_prep_2026.R to get critical functions into memory
+# nemsqa_report_ttr_01_2026.R to generate statistical files for the report
 ###_____________________________________________________________________________
 # assume:
-# that nemsqa_report_prep_2025.R was already ran to load needed packages
+# that nemsqa_report_prep_2026.R was already ran to load needed packages
 # and project-specific custom functions in the project
-# nemsqa_report_ttr_01_2025.R was ran to generate statistical files
+# nemsqa_report_ttr_01_2026.R was ran to generate statistical files
 ###_____________________________________________________________________________
 
 ### DATA -----------------------------------------------------------------------
@@ -52,10 +52,12 @@ ttr_01_results_gt <- ttr_01_result_year |>
   prepare_results_statistical_file() |>
   results_statistical_file_gt(groups = c("INCIDENT_YEAR")) |>
   # Add various source notes with icons from fontawesome
-  gt::tab_source_note(source_note = gt::md(paste0(
-    fontawesome::fa("note-sticky"),
-    " * Indicates masked data with n < 6."
-  ))) |>
+  gt::tab_source_note(
+    source_note = gt::md(paste0(
+      fontawesome::fa("note-sticky"),
+      " * Indicates masked data with n < 6."
+    ))
+  ) |>
   tab_style_hhs(
     message_text = "`Comparison` indicates the result with 95% confidence intervals.",
     border_cols = c(-1, -2),
@@ -82,15 +84,17 @@ export_nemsqa_gt(
 iowa_counties_sf <- prepare_map_data()
 
 # summarize performance statewide over the timeframe of interest
-ttr_01_result_counties_map <- results_to_county_map(df = ttr_01_result_counties,
-                                                       add_text = FALSE,
-                                                       format = "percent")
+ttr_01_result_counties_map <- results_to_county_map(
+  df = ttr_01_result_counties,
+  add_text = FALSE,
+  format = "percent"
+)
 
 # save the plot
 ggplot2::ggsave(
   filename = "ttr_01_result_counties_map.png",
   plot = ttr_01_result_counties_map,
-  path = "C:/Users/nfoss0/OneDrive - State of Iowa HHS/Analytics/BEMTS/NEMSQA Report/2025/output/TTR-01/result",
+  path = "C:/Users/nfoss0/OneDrive - State of Iowa HHS/Analytics/BEMTS/NEMSQA Report/2026/output/TTR-01/result",
   width = 7,
   height = 6
 )
