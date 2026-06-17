@@ -1,4 +1,4 @@
-### IOWA NEMSQA REPORT VISUALIZATIONS Respiratory-02 2026 ---------------------------
+# IOWA NEMSQA REPORT VISUALIZATIONS Respiratory-02 2026 ---------------------------
 
 ###_____________________________________________________________________________
 # this script will contain all reporting visualizations for Respiratory-02 use:
@@ -11,7 +11,7 @@
 # nemsqa_report_respiratory_02_2026.R was ran to generate statistical files
 ###_____________________________________________________________________________
 
-### DATA -----------------------------------------------------------------------
+# DATA -----------------------------------------------------------------------
 
 # import statistical outputs for this measure
 import_nemsqa_statistical_files(measure = "Respiratory-02")
