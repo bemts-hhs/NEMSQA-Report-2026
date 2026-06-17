@@ -1,26 +1,26 @@
-### IOWA NEMSQA REPORT VISUALIZATIONS Syncope-01 2025 ---------------------------
+# IOWA NEMSQA REPORT VISUALIZATIONS Syncope-01 2026 ---------------------------
 
 ###_____________________________________________________________________________
 # this script will contain all reporting visualizations for Syncope-01 use:
-# nemsqa_report_prep_2025.R to get critical functions into memory
-# nemsqa_report_syncope_01_2025.R to generate statistical files for the report
+# nemsqa_report_prep_2026.R to get critical functions into memory
+# nemsqa_report_syncope_01_2026.R to generate statistical files for the report
 ###_____________________________________________________________________________
 # assume:
-# that nemsqa_report_prep_2025.R was already ran to load needed packages
+# that nemsqa_report_prep_2026.R was already ran to load needed packages
 # and project-specific custom functions in the project
-# nemsqa_report_syncope_01_2025.R was ran to generate statistical files
+# nemsqa_report_syncope_01_2026.R was ran to generate statistical files
 ###_____________________________________________________________________________
 
-### DATA -----------------------------------------------------------------------
+# DATA -----------------------------------------------------------------------
 
 # import statistical outputs for this measure
 import_nemsqa_statistical_files(measure = "Syncope-01")
 
-### TABLES ---------------------------------------------------------------------
+# TABLES ---------------------------------------------------------------------
 
-### population data ############################################################
+# population data ############################################################
 
-# generate the population gt table
+## generate the population gt table ----
 syncope_01_pop_gt <- syncope_01_pop_years |>
   prepare_population_statistical_file() |>
   population_statistical_file_gt(measure = "Syncope-01", fig_dim = c(8, 40)) |>
@@ -45,9 +45,9 @@ export_nemsqa_gt(
   extension = "png"
 )
 
-### results data ###############################################################
+# results data ###############################################################
 
-# generate the results gt table
+## generate the results gt table ----
 syncope_01_results_gt <- syncope_01_result_year |>
   prepare_results_statistical_file() |>
   results_statistical_file_gt(groups = c("INCIDENT_YEAR")) |>
@@ -83,14 +83,14 @@ export_nemsqa_gt(
 # Run only once per session
 iowa_counties_sf <- prepare_map_data()
 
-# summarize performance statewide over the timeframe of interest
+## summarize performance statewide over the timeframe of interest ----
 syncope_01_result_counties_map <- results_to_county_map(
   df = syncope_01_result_counties,
   add_text = FALSE,
   format = "percent"
 )
 
-# save the plot
+## save the plot ----
 ggplot2::ggsave(
   filename = "syncope_01_result_counties_map.png",
   plot = syncope_01_result_counties_map,
