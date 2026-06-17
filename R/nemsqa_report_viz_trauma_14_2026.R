@@ -1,30 +1,32 @@
-### IOWA NEMSQA REPORT VISUALIZATIONS Trauma-14 2025 ---------------------------
+# IOWA NEMSQA REPORT VISUALIZATIONS Trauma-14 2026 ---------------------------
 
 ###_____________________________________________________________________________
 # this script will contain all reporting visualizations for Trauma-14 use:
-# nemsqa_report_prep_2025.R to get critical functions into memory
-# nemsqa_report_trauma_14_2025.R to generate statistical files for the report
+# nemsqa_report_prep_2026.R to get critical functions into memory
+# nemsqa_report_trauma_14_2026.R to generate statistical files for the report
 ###_____________________________________________________________________________
 # assume:
-# that nemsqa_report_prep_2025.R was already ran to load needed packages
+# that nemsqa_report_prep_2026.R was already ran to load needed packages
 # and project-specific custom functions in the project
-# nemsqa_report_trauma_14_2025.R was ran to generate statistical files
+# nemsqa_report_trauma_14_2026.R was ran to generate statistical files
 ###_____________________________________________________________________________
 
-### DATA -----------------------------------------------------------------------
+# DATA -----------------------------------------------------------------------
 
 # import statistical outputs for this measure
 import_nemsqa_statistical_files(measure = "Trauma-14")
 
-### TABLES ---------------------------------------------------------------------
+# TABLES ---------------------------------------------------------------------
 
-### population data ############################################################
+# population data ############################################################
+
+## generate the population gt table ----
 
 # generate the population gt table
 # do this in two parts as the png file
 # will be too tall for Word
 
-# part 1
+### part 1 ----
 trauma_14_pop_gt_1 <- trauma_14_pop_years |>
   prepare_population_statistical_file() |>
   head(n = 15) |>
@@ -42,7 +44,7 @@ trauma_14_pop_gt_1 <- trauma_14_pop_years |>
     footnote = 20
   )
 
-# part 2
+### part 2 ----
 trauma_14_pop_gt_2 <- trauma_14_pop_years |>
   prepare_population_statistical_file() |>
   tail(n = 15) |>
@@ -67,7 +69,8 @@ export_nemsqa_gt(
   gt_object = trauma_14_pop_gt_1,
   measure = "Trauma-14",
   folder = "pop",
-  extension = "png"
+  extension = "png",
+  vwidth = 1100
 )
 
 # part 2
@@ -75,7 +78,8 @@ export_nemsqa_gt(
   gt_object = trauma_14_pop_gt_2,
   measure = "Trauma-14",
   folder = "pop",
-  extension = "png"
+  extension = "png",
+  vwidth = 1100
 )
 
 ### results data ###############################################################

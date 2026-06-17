@@ -582,9 +582,9 @@ pattern_rm <- function(
   pattern,
   env = .GlobalEnv,
   protect = character(0),
-  verbose = FALSE,
+  verbose = TRUE,
   dry_run = FALSE,
-  permission = NULL
+  permission = FALSE
 ) {
   # Use regex to match objects in the target environment
   all_objs <- base::ls(envir = env, pattern = pattern)

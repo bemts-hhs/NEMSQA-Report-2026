@@ -1,4 +1,4 @@
-### IOWA NEMSQA REPORT VISUALIZATIONS TTR-01 2026 ---------------------------
+# IOWA NEMSQA REPORT VISUALIZATIONS TTR-01 2026 ---------------------------
 
 ###_____________________________________________________________________________
 # this script will contain all reporting visualizations for TTR-01 use:
@@ -11,16 +11,16 @@
 # nemsqa_report_ttr_01_2026.R was ran to generate statistical files
 ###_____________________________________________________________________________
 
-### DATA -----------------------------------------------------------------------
+# DATA -----------------------------------------------------------------------
 
 # import statistical outputs for this measure
 import_nemsqa_statistical_files(measure = "TTR-01")
 
-### TABLES ---------------------------------------------------------------------
+# TABLES ---------------------------------------------------------------------
 
-### population data ############################################################
+# population data ############################################################
 
-# generate the population gt table
+## generate the population gt table ----
 ttr_01_pop_gt <- ttr_01_pop_years |>
   prepare_population_statistical_file() |>
   population_statistical_file_gt(measure = "TTR-01", fig_dim = c(8, 40)) |>
@@ -45,9 +45,9 @@ export_nemsqa_gt(
   extension = "png"
 )
 
-### results data ###############################################################
+# results data ###############################################################
 
-# generate the results gt table
+## generate the results gt table ----
 ttr_01_results_gt <- ttr_01_result_year |>
   prepare_results_statistical_file() |>
   results_statistical_file_gt(groups = c("INCIDENT_YEAR")) |>
@@ -83,14 +83,14 @@ export_nemsqa_gt(
 # Run only once per session
 iowa_counties_sf <- prepare_map_data()
 
-# summarize performance statewide over the timeframe of interest
+## summarize performance statewide over the timeframe of interest ----
 ttr_01_result_counties_map <- results_to_county_map(
   df = ttr_01_result_counties,
   add_text = FALSE,
   format = "percent"
 )
 
-# save the plot
+## save the plot ----
 ggplot2::ggsave(
   filename = "ttr_01_result_counties_map.png",
   plot = ttr_01_result_counties_map,
